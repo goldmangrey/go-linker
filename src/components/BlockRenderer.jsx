@@ -2,16 +2,28 @@ import React from 'react';
 import WhatsappBlock from './blocks/WhatsappBlock';
 import CatalogBlock from './blocks/CatalogBlock';
 
-const BlockRenderer = ({ blocks, editable = false, onDelete, onMove }) => {
+const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
     return (
         <div className="space-y-4">
             {blocks.map((block, index) => (
                 <div key={block.id || index} className="relative group">
                     {block.type === 'whatsapp' && (
-                        <WhatsappBlock block={block} editable={editable} />
+                        <WhatsappBlock
+                            block={block}
+                            editable={editable}
+                            onUpdate={(updatedBlock) => onUpdate && onUpdate(updatedBlock)}
+                        />
                     )}
+
+
                     {block.type === 'catalog' && (
-                        <CatalogBlock block={block} editable={editable} />
+                        <CatalogBlock
+                            block={block}
+                            editable={editable}
+                            onUpdate={(updatedProducts) =>
+                                onUpdate && onUpdate(block, updatedProducts)
+                            }
+                        />
                     )}
 
                     {editable && (

@@ -3,6 +3,10 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth } from '../firebase/firebase';
 
 const AddBlockModal = ({ onClose, onAdd }) => {
+    const [buttonType, setButtonType] = useState('whatsapp');
+    const [label, setLabel] = useState('Открыть');
+    const [color, setColor] = useState('#25D366');
+
     const [type, setType] = useState('');
     const [number, setNumber] = useState('');
     const [products, setProducts] = useState([{ name: '', imageUrl: '', price: '' }]);
@@ -38,7 +42,13 @@ const AddBlockModal = ({ onClose, onAdd }) => {
 
     const handleSubmit = () => {
         if (type === 'whatsapp') {
-            onAdd({ type, number });
+            onAdd({
+                type: buttonType,
+                number,
+                label,
+                color,
+                link: buttonType === '2gis' ? number : ''
+            });
         } else if (type === 'catalog') {
             onAdd({ type, products });
         }
@@ -56,19 +66,46 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                     className="w-full border rounded px-3 py-2"
                 >
                     <option value="">Выберите тип</option>
-                    <option value="whatsapp">WhatsApp</option>
+                    <option value="whatsapp">Кнопка</option>
                     <option value="catalog">Каталог</option>
                 </select>
 
                 {type === 'whatsapp' && (
-                    <input
-                        type="text"
-                        placeholder="Номер телефона"
-                        value={number}
-                        onChange={(e) => setNumber(e.target.value)}
-                        className="w-full border rounded px-3 py-2"
-                    />
+                    <div className="space-y-2">
+                        <select
+                            value={buttonType}
+                            onChange={(e) => setButtonType(e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                        >
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="2gis">2ГИС</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            placeholder={buttonType === 'whatsapp' ? 'Номер телефона' : 'Ссылка на 2ГИС'}
+                            value={number}
+                            onChange={(e) => setNumber(e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Текст кнопки"
+                            value={label}
+                            onChange={(e) => setLabel(e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                        />
+
+                        <input
+                            type="color"
+                            value={color}
+                            onChange={(e) => setColor(e.target.value)}
+                            className="w-full h-10 rounded"
+                        />
+                    </div>
                 )}
+
 
                 {type === 'catalog' && (
                     <div className="space-y-2">

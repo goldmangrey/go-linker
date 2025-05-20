@@ -48,47 +48,56 @@ const PublicPage = () => {
     }, [slug]);
 
     if (notFound) {
-        return <div className="text-center text-red-500 mt-10">Страница не найдена</div>;
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-100 text-gray-500">
+                Профиль не найден
+            </div>
+        );
     }
 
     if (!userData) {
-        return <div className="text-center text-white mt-10">Загрузка...</div>;
+        return (
+            <div className="flex items-center justify-center h-screen bg-white text-gray-400">
+                Загрузка...
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center">
-            {userData.coverUrl ? (
-                <img src={userData.coverUrl} alt="Cover" className="w-full h-40 object-cover" />
-            ) : (
-                <div className="w-full h-40 bg-gradient-to-r from-lime-500 to-green-700" />
-            )}
-
-            <div className="relative -mt-10">
-                {userData.logoUrl ? (
+        <div className="min-h-screen bg-white text-gray-800">
+            {/* Обложка */}
+            <div className="relative h-40 sm:h-48 bg-gray-200">
+                {userData.coverUrl && (
                     <img
-                        src={userData.logoUrl}
-                        alt="Logo"
-                        className="w-20 h-20 rounded-full border-4 border-white object-cover"
+                        src={userData.coverUrl}
+                        alt="Cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                     />
-                ) : (
-                    <div className="w-20 h-20 rounded-full border-4 border-white bg-white/20 text-xs text-white flex items-center justify-center">
-                        no logo
-                    </div>
                 )}
             </div>
 
-            <div className="mt-4 text-center">
-                <h1 className="text-2xl font-bold">{userData.orgName}</h1>
-                <p className="text-sm text-gray-400">{userData.orgAddress}</p>
+            {/* Логотип */}
+            <div className="flex justify-center -mt-12">
+                <img
+                    src={userData.logoUrl || '/assets/yourlogo.png'}
+                    alt="Logo"
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-white"
+                />
             </div>
 
-            {/* ⬇ Тут позже будут блоки ⬇ */}
-            <div className="w-full max-w-sm mt-8 px-4 space-y-4">
+            {/* Название и адрес */}
+            <div className="text-center mt-2 px-4">
+                <h1 className="text-xl font-bold">{userData.orgName || 'Название'}</h1>
+                <p className="text-sm text-gray-500">{userData.orgAddress || 'Адрес'}</p>
+            </div>
+
+            {/* Контент */}
+            <div className="mt-6 px-4 pb-10">
                 <BlockRenderer blocks={blocks} />
             </div>
-
         </div>
     );
+
 };
 
 export default PublicPage;

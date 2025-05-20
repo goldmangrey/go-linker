@@ -1,11 +1,25 @@
-import React from 'react';
+import EditCatalogModal from "../EditCatalogModal";
+import {useState} from "react";
 
-const CatalogBlock = ({ block }) => {
+const CatalogBlock = ({ block, editable = false, onUpdate }) => {
+    const [showEditor, setShowEditor] = useState(false);
     const products = block.products || [];
 
     return (
-        <div>
+        <div className="relative border rounded-lg p-3 bg-white shadow">
+            {editable && (
+                <div className="flex justify-between mb-2">
+                    <button
+                        onClick={() => setShowEditor(true)}
+                        className="bg-lime-600 text-white text-xs px-3 py-1 rounded"
+                    >
+                        ✏️ Редактировать каталог
+                    </button>
+                </div>
+            )}
+
             <h3 className="text-lg font-bold mb-2">Хиты продаж</h3>
+
             <div className="flex space-x-4 overflow-x-auto pb-2">
                 {products.map((product, idx) => (
                     <div
@@ -19,8 +33,17 @@ const CatalogBlock = ({ block }) => {
                     </div>
                 ))}
             </div>
+
+            {showEditor && (
+                <EditCatalogModal
+                    block={block}
+                    onClose={() => setShowEditor(false)}
+                    onSave={onUpdate}
+                />
+            )}
         </div>
     );
+
 };
 
 export default CatalogBlock;

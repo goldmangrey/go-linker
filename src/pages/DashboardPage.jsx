@@ -39,7 +39,10 @@ const DashboardPage = () => {
                 const data = docSnap.data();
                 const blocksRef = collection(db, 'users', firebaseUser.uid, 'blocks');
                 const blocksSnap = await getDocs(blocksRef);
-                const loadedBlocks = blocksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const loadedBlocks = blocksSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
                 setBlocks(loadedBlocks);
                 setUser({ ...firebaseUser, ...data });
                 if (data.slug) setSlug(data.slug);
@@ -156,13 +159,34 @@ const DashboardPage = () => {
         setBlocks(blocks.filter((_, i) => i !== index));
     };
 
-    const handleMoveBlock = (index, direction) => {
+    const handleMoveBlock = async (index, direction) => {
         const newBlocks = [...blocks];
         const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= blocks.length) return;
+        if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
+
+        // Переставляем
         [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
-        setBlocks(newBlocks);
+
+        // Обновляем порядок в памяти
+        const reordered = newBlocks.map((block, i) => ({
+            ...block,
+            order: i
+        }));
+        setBlocks(reordered);
+
+        // Сохраняем порядок в Firestore
+        for (const block of reordered) {
+            await setDoc(doc(db, 'users', user.uid, 'blocks', block.id), block);
+        }
     };
+
+    const handleUpdateBlock = async (updatedBlock) => {
+        await setDoc(doc(db, 'users', user.uid, 'blocks', updatedBlock.id), updatedBlock);
+        setBlocks((prev) =>
+            prev.map((b) => (b.id === updatedBlock.id ? updatedBlock : b))
+        );
+    };
+
 
     return (
         <div className="min-h-screen w-full bg-black flex justify-center items-start overflow-auto pt-6">
@@ -228,7 +252,10 @@ const DashboardPage = () => {
                             editable
                             onDelete={handleDeleteBlock}
                             onMove={handleMoveBlock}
+                            onUpdate={handleUpdateBlock}
                         />
+
+
                     </div>
 
                     <div className="py-10 text-center">
@@ -365,10 +392,13 @@ const DashboardPage = () => {
                     onClose={() => setShowAddBlock(false)}
                     onAdd={async (block) => {
                         const ref = collection(db, 'users', user.uid, 'blocks');
-                        await addDoc(ref, block);
-                        setBlocks((prev) => [...prev, block]);
+                        const order = blocks.length;
+                        const newBlock = { ...block, order };
+                        const docRef = await addDoc(ref, newBlock);
+                        setBlocks((prev) => [...prev, { ...newBlock, id: docRef.id }]);
                     }}
                 />
+
             )}
 
         </div>
