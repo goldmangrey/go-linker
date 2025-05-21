@@ -213,37 +213,37 @@ const DashboardPage = () => {
                 </div>
 
 
-                <div className="relative h-36 w-full">
-                    {coverUrl ? (
-                        <img src={coverUrl} alt="Обложка" className="absolute inset-0 object-cover w-full h-full" />
-                    ) : (
-                        <div className="absolute inset-0 bg-gradient-to-r from-lime-500 to-green-800"></div>
-                    )}
-                    <button
-                        onClick={() => setShowCoverEditor(true)}
-                        className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded"
-                    >
-                        Изменить обложку
-                    </button>
-                </div>
+                {/*<div className="relative h-36 w-full">*/}
+                {/*    {coverUrl ? (*/}
+                {/*        <img src={coverUrl} alt="Обложка" className="absolute inset-0 object-cover w-full h-full" />*/}
+                {/*    ) : (*/}
+                {/*        <div className="absolute inset-0 bg-gradient-to-r from-lime-500 to-green-800"></div>*/}
+                {/*    )}*/}
+                {/*    <button*/}
+                {/*        onClick={() => setShowCoverEditor(true)}*/}
+                {/*        className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded"*/}
+                {/*    >*/}
+                {/*        Изменить обложку*/}
+                {/*    </button>*/}
+                {/*</div>*/}
 
-                <div className="relative -mt-10 mb-3 text-center">
-                    <div onClick={() => setShowLogoEditor(true)}>
-                        {logoUrl ? (
-                            <img
-                                src={logoUrl}
-                                alt="Лого"
-                                className="w-20 h-20 mx-auto rounded-full object-cover border-4 border-white cursor-pointer"
-                            />
-                        ) : (
-                            <div className="w-20 h-20 mx-auto rounded-full border-4 border-gray-300 flex items-center justify-center text-xs text-gray-400 bg-white/40 cursor-pointer">
-                                your logo
-                            </div>
-                        )}
-                    </div>
-                    <h2 className="mt-2 text-lg font-semibold">{orgName || 'Название организации'}</h2>
-                    <p className="text-sm text-gray-600">{orgAddress || 'Адрес организации'}</p>
-                </div>
+                {/*<div className="relative -mt-10 mb-3 text-center">*/}
+                {/*    <div onClick={() => setShowLogoEditor(true)}>*/}
+                {/*        {logoUrl ? (*/}
+                {/*            <img*/}
+                {/*                src={logoUrl}*/}
+                {/*                alt="Лого"*/}
+                {/*                className="w-20 h-20 mx-auto rounded-full object-cover border-4 border-white cursor-pointer"*/}
+                {/*            />*/}
+                {/*        ) : (*/}
+                {/*            <div className="w-20 h-20 mx-auto rounded-full border-4 border-gray-300 flex items-center justify-center text-xs text-gray-400 bg-white/40 cursor-pointer">*/}
+                {/*                your logo*/}
+                {/*            </div>*/}
+                {/*        )}*/}
+                {/*    </div>*/}
+                {/*    <h2 className="mt-2 text-lg font-semibold">{orgName || 'Название организации'}</h2>*/}
+                {/*    <p className="text-sm text-gray-600">{orgAddress || 'Адрес организации'}</p>*/}
+                {/*</div>*/}
 
                 <div className="px-4">
                     <div className="space-y-4">

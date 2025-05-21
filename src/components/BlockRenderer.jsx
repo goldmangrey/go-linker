@@ -1,6 +1,7 @@
 import React from 'react';
 import WhatsappBlock from './blocks/WhatsappBlock';
 import CatalogBlock from './blocks/CatalogBlock';
+import ProfileBlock from './blocks/ProfileBlock';
 
 const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
     return (
@@ -25,6 +26,15 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                             }
                         />
                     )}
+
+                    {block.type === 'profile' && (
+                        <ProfileBlock
+                            block={block}
+                            editable={editable}
+                            onEdit={(updated) => onUpdate && onUpdate(updated)}
+                        />
+                    )}
+
 
                     {editable && (
                         <div className="absolute top-0 right-0 flex gap-1 p-1 opacity-0 group-hover:opacity-100 transition">

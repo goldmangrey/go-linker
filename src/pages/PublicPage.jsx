@@ -65,7 +65,7 @@ const PublicPage = () => {
 
     return (
         <div className="min-h-screen bg-white text-gray-800">
-            {/* Обложка */}
+            {/* Обложка + логотип */}
             <div className="relative h-40 sm:h-48 bg-gray-200">
                 {userData.coverUrl && (
                     <img
@@ -74,16 +74,15 @@ const PublicPage = () => {
                         className="absolute inset-0 w-full h-full object-cover"
                     />
                 )}
+                <div className="absolute inset-x-0 bottom-[-48px] flex justify-center">
+                    <img
+                        src={userData.logoUrl || '/assets/yourlogo.png'}
+                        alt="Logo"
+                        className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-white"
+                    />
+                </div>
             </div>
 
-            {/* Логотип */}
-            <div className="flex justify-center -mt-12">
-                <img
-                    src={userData.logoUrl || '/assets/yourlogo.png'}
-                    alt="Logo"
-                    className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-white"
-                />
-            </div>
 
             {/* Название и адрес */}
             <div className="text-center mt-2 px-4">

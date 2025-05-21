@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc, getDoc } from 'firebase/firestore';
+import { setDoc, doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,7 +40,15 @@ const SignUpForm = () => {
             await setDoc(doc(db, 'slugs', finalSlug), {
                 uid
             });
-
+            const blocksRef = collection(db, 'users', uid, 'blocks');
+            await addDoc(blocksRef, {
+                type: 'profile',
+                orgName,
+                orgAddress,
+                logoUrl: '/assets/yourlogo.png',
+                coverUrl: '',
+                order: 0
+            });
             navigate('/dashboard');
         } catch (error) {
             console.error('Ошибка регистрации:', error.message);
