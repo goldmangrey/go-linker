@@ -1,7 +1,7 @@
 import EditCatalogModal from "../EditCatalogModal";
 import {useState} from "react";
 
-const CatalogBlock = ({ block, editable = false, onUpdate }) => {
+const CatalogBlock = ({ block, editable = false, onEdit}) => {
     const [showEditor, setShowEditor] = useState(false);
     const products = block.products || [];
 
