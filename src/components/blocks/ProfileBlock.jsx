@@ -1,6 +1,10 @@
 import React from 'react';
+import EditProfileModal from '../EditProfileModal';
+import { useState } from 'react';
 
 const ProfileBlock = ({ block, editable = false, onEdit }) => {
+    const [showEditor, setShowEditor] = useState(false);
+
     const {
         coverUrl,
         logoUrl,
@@ -39,12 +43,23 @@ const ProfileBlock = ({ block, editable = false, onEdit }) => {
 
                 {editable && (
                     <button
-                        onClick={() => onEdit && onEdit(block)}
+                        onClick={() => setShowEditor(true)}
                         className="mt-2 bg-black text-white text-xs px-3 py-1 rounded"
                     >
                         ✏️ Редактировать профиль
                     </button>
                 )}
+                {showEditor && (
+                    <EditProfileModal
+                        block={block}
+                        onClose={() => setShowEditor(false)}
+                        onSave={(updatedBlock) => {
+                            onEdit && onEdit(updatedBlock);
+                            setShowEditor(false);
+                        }}
+                    />
+                )}
+
             </div>
         </div>
     );

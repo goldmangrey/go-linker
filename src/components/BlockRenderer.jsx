@@ -36,6 +36,7 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                     )}
 
 
+
                     {editable && (
                         <div className="absolute top-0 right-0 flex gap-1 p-1 opacity-0 group-hover:opacity-100 transition">
                             <button
