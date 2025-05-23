@@ -38,9 +38,14 @@ const CatalogBlock = ({ block, editable = false, onUpdate }) => {
                 <EditCatalogModal
                     block={block}
                     onClose={() => setShowEditor(false)}
-                    onSave={onUpdate}
+                    onSave={(updatedBlock) => {
+                        const fullBlock = { ...block, ...updatedBlock };
+                        onEdit && onEdit(fullBlock);
+                        setShowEditor(false);
+                    }}
                 />
             )}
+
         </div>
     );
 

@@ -86,11 +86,15 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                 <div className="flex justify-between pt-2">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Отмена</button>
                     <button
-                        onClick={() => onSave(products)}
-                        className="px-4 py-2 bg-lime-500 text-white rounded"
+                        onClick={() => {
+                            const updatedBlock = { ...block, products };
+                            onSave && onSave(updatedBlock);
+                        }}
+                        className="bg-lime-500 text-white px-4 py-2 rounded"
                     >
                         Сохранить
                     </button>
+
                 </div>
             </div>
         </div>

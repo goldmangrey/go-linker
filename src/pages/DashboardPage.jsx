@@ -56,8 +56,10 @@ const DashboardPage = () => {
                 }
 
                 if (data.coverUrl) setCoverUrl(data.coverUrl);
+                if (data.logoUrl) setLogoUrl(data.logoUrl);
                 if (data.orgName) setOrgName(data.orgName);
                 if (data.orgAddress) setOrgAddress(data.orgAddress);
+
                 setLoading(false); // ✅ переместили внутрь блока
             } else {
                 // fallback, если нет данных
