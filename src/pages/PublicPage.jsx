@@ -91,10 +91,11 @@ const PublicPage = () => {
 
 
             {/* Название и адрес */}
-            <div className="text-center mt-2 px-4">
-                <h1 className="text-xl font-bold">{userData.orgName || 'Название'}</h1>
-                <p className="text-sm text-gray-500">{userData.orgAddress || 'Адрес'}</p>
-            </div>
+                    <div className="text-center mt-14 px-4">
+                        <h1 className="text-xl font-bold">{userData.orgName || 'Название'}</h1>
+                        <p className="text-sm text-gray-500">{userData.orgAddress || 'Адрес'}</p>
+                    </div>
+
         </>
     )}
             {/* Контент */}
