@@ -71,27 +71,27 @@ const DashboardPage = () => {
         navigate('/signin');
     };
 
-    const handleLogoChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setRawLogoImage(reader.result);
-            // setShowLogoEditor(false);
-        };
-        reader.readAsDataURL(file);
-    };
+    // const handleLogoChange = (e) => {
+    //     const file = e.target.files[0];
+    //     if (!file) return;
+    //     const reader = new FileReader();
+    //     reader.onloadend = () => {
+    //         setRawLogoImage(reader.result);
+    //         // setShowLogoEditor(false);
+    //     };
+    //     reader.readAsDataURL(file);
+    // };
 
-    const handleCoverChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setRawCoverImage(reader.result);
-            // setShowCoverEditor(false);
-        };
-        reader.readAsDataURL(file);
-    };
+    // const handleCoverChange = (e) => {
+    //     const file = e.target.files[0];
+    //     if (!file) return;
+    //     const reader = new FileReader();
+    //     reader.onloadend = () => {
+    //         setRawCoverImage(reader.result);
+    //         // setShowCoverEditor(false);
+    //     };
+    //     reader.readAsDataURL(file);
+    // };
 
     const handleUploadLogo = async (croppedDataUrl) => {
         if (!croppedDataUrl || !user) return;
@@ -126,25 +126,25 @@ const DashboardPage = () => {
         // setCoverUrl(downloadURL);
     };
 
-    const handleDeleteCover = async () => {
-        if (!user) return;
-        const storage = getStorage();
-        const storageRef = ref(storage, `covers/${user.uid}`);
-        await deleteObject(storageRef).catch(() => {});
-        await setDoc(doc(db, 'users', user.uid), { coverUrl: '' }, { merge: true });
-        // setCoverUrl(null);
-        // setShowCoverEditor(false);
-    };
+    // const handleDeleteCover = async () => {
+    //     if (!user) return;
+    //     const storage = getStorage();
+    //     const storageRef = ref(storage, `covers/${user.uid}`);
+    //     await deleteObject(storageRef).catch(() => {});
+    //     await setDoc(doc(db, 'users', user.uid), { coverUrl: '' }, { merge: true });
+    //     // setCoverUrl(null);
+    //     // setShowCoverEditor(false);
+    // };
 
-    const handleDeleteLogo = async () => {
-        if (!user) return;
-        const storage = getStorage();
-        const storageRef = ref(storage, `logos/${user.uid}`);
-        await deleteObject(storageRef).catch(() => {});
-        await setDoc(doc(db, 'users', user.uid), { logoUrl: '' }, { merge: true });
-        // setLogoUrl(null);
-        // setShowLogoEditor(false);
-    };
+    // const handleDeleteLogo = async () => {
+    //     if (!user) return;
+    //     const storage = getStorage();
+    //     const storageRef = ref(storage, `logos/${user.uid}`);
+    //     await deleteObject(storageRef).catch(() => {});
+    //     await setDoc(doc(db, 'users', user.uid), { logoUrl: '' }, { merge: true });
+    //     // setLogoUrl(null);
+    //     // setShowLogoEditor(false);
+    // };
     if (loading) {
         return (
             <div className="h-screen w-full flex items-center justify-center bg-black text-white">
