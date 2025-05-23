@@ -16,7 +16,7 @@ const DashboardPage = () => {
     const [loading, setLoading] = useState(true);
     const [logoUrl, setLogoUrl] = useState(null);
     const [coverUrl, setCoverUrl] = useState(null);
-    const [orgName, setOrgName] = useState('');
+    // const [orgName, setOrgName] = useState('');
     const [orgAddress, setOrgAddress] = useState('');
     const [rawLogoImage, setRawLogoImage] = useState(null);
     const [rawCoverImage, setRawCoverImage] = useState(null);

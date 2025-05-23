@@ -5,7 +5,7 @@ const EditButtonModal = ({ block, onClose, onSave }) => {
     const [label, setLabel] = useState(block.label || 'Открыть');
     const [number, setNumber] = useState(block.number || '');
     const [color, setColor] = useState(block.color || '#25D366');
-    const [link, setLink] = useState(block.link || '');
+    // const [link, setLink] = useState(block.link || '');
 
     const handleSave = () => {
         onSave({
