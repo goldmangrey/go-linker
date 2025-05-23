@@ -14,10 +14,10 @@ const DashboardPage = () => {
     const [user, setUser] = useState(null);
     const [blocks, setBlocks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [logoUrl, setLogoUrl] = useState(null);
-    const [coverUrl, setCoverUrl] = useState(null);
+    // const [logoUrl, setLogoUrl] = useState(null);
+    // const [coverUrl, setCoverUrl] = useState(null);
     // const [orgName, setOrgName] = useState('');
-    const [orgAddress, setOrgAddress] = useState('');
+    // const [orgAddress, setOrgAddress] = useState('');
     const [rawLogoImage, setRawLogoImage] = useState(null);
     const [rawCoverImage, setRawCoverImage] = useState(null);
     const [showCoverEditor, setShowCoverEditor] = useState(false);
@@ -51,9 +51,9 @@ const DashboardPage = () => {
                     console.log('Загружен slug:', data.slug);
                 }
 
-                if (data.coverUrl) setCoverUrl(data.coverUrl);
-                if (data.orgName) setOrgName(data.orgName);
-                if (data.orgAddress) setOrgAddress(data.orgAddress);
+                // if (data.coverUrl) setCoverUrl(data.coverUrl);
+                // if (data.orgName) setOrgName(data.orgName);
+                // if (data.orgAddress) setOrgAddress(data.orgAddress);
                 setLoading(false); // ✅ переместили внутрь блока
             } else {
                 // fallback, если нет данных
