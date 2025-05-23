@@ -1,7 +1,6 @@
 import React from 'react';
 import WhatsappBlock from './blocks/WhatsappBlock';
 import CatalogBlock from './blocks/CatalogBlock';
-import ProfileBlock from './blocks/ProfileBlock';
 
 const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
     return (
@@ -27,13 +26,6 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                         />
                     )}
 
-                    {block.type === 'profile' && (
-                        <ProfileBlock
-                            block={block}
-                            editable={editable}
-                            onEdit={(updated) => onUpdate && onUpdate(updated)}
-                        />
-                    )}
 
 
 

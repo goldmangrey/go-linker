@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase/firebase';
 import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import ImageCropper from '../components/ImageCropper';
@@ -14,17 +14,18 @@ const DashboardPage = () => {
     const [user, setUser] = useState(null);
     const [blocks, setBlocks] = useState([]);
     const [loading, setLoading] = useState(true);
-    // const [logoUrl, setLogoUrl] = useState(null);
-    // const [coverUrl, setCoverUrl] = useState(null);
-    // const [orgName, setOrgName] = useState('');
-    // const [orgAddress, setOrgAddress] = useState('');
+    const [logoUrl, setLogoUrl] = useState(null);
+    const [coverUrl, setCoverUrl] = useState(null);
+    const [orgName, setOrgName] = useState('');
+    const [orgAddress, setOrgAddress] = useState('');
     const [rawLogoImage, setRawLogoImage] = useState(null);
     const [rawCoverImage, setRawCoverImage] = useState(null);
-    // const [showCoverEditor, setShowCoverEditor] = useState(false);
-    // const [showLogoEditor, setShowLogoEditor] = useState(false);
+    const [showCoverEditor, setShowCoverEditor] = useState(false);
+    const [showLogoEditor, setShowLogoEditor] = useState(false);
     const navigate = useNavigate();
     const [slug, setSlug] = useState('');
     const [showAddBlock, setShowAddBlock] = useState(false);
+    const [showProfile, setShowProfile] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -51,9 +52,9 @@ const DashboardPage = () => {
                     console.log('Загружен slug:', data.slug);
                 }
 
-                // if (data.coverUrl) setCoverUrl(data.coverUrl);
-                // if (data.orgName) setOrgName(data.orgName);
-                // if (data.orgAddress) setOrgAddress(data.orgAddress);
+                if (data.coverUrl) setCoverUrl(data.coverUrl);
+                if (data.orgName) setOrgName(data.orgName);
+                if (data.orgAddress) setOrgAddress(data.orgAddress);
                 setLoading(false); // ✅ переместили внутрь блока
             } else {
                 // fallback, если нет данных
@@ -71,27 +72,27 @@ const DashboardPage = () => {
         navigate('/signin');
     };
 
-    // const handleLogoChange = (e) => {
-    //     const file = e.target.files[0];
-    //     if (!file) return;
-    //     const reader = new FileReader();
-    //     reader.onloadend = () => {
-    //         setRawLogoImage(reader.result);
-    //         // setShowLogoEditor(false);
-    //     };
-    //     reader.readAsDataURL(file);
-    // };
+    const handleLogoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setRawLogoImage(reader.result);
+            setShowLogoEditor(false);
+        };
+        reader.readAsDataURL(file);
+    };
 
-    // const handleCoverChange = (e) => {
-    //     const file = e.target.files[0];
-    //     if (!file) return;
-    //     const reader = new FileReader();
-    //     reader.onloadend = () => {
-    //         setRawCoverImage(reader.result);
-    //         // setShowCoverEditor(false);
-    //     };
-    //     reader.readAsDataURL(file);
-    // };
+    const handleCoverChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setRawCoverImage(reader.result);
+            setShowCoverEditor(false);
+        };
+        reader.readAsDataURL(file);
+    };
 
     const handleUploadLogo = async (croppedDataUrl) => {
         if (!croppedDataUrl || !user) return;
@@ -100,7 +101,7 @@ const DashboardPage = () => {
         await uploadString(storageRef, croppedDataUrl, 'data_url');
         const downloadURL = await getDownloadURL(storageRef);
         await setDoc(doc(db, 'users', user.uid), { logoUrl: downloadURL }, { merge: true });
-        // setLogoUrl(downloadURL);
+        setLogoUrl(downloadURL);
     };
 
     const handleUploadCover = async (croppedDataUrl) => {
@@ -118,33 +119,33 @@ const DashboardPage = () => {
             const downloadURL = await getDownloadURL(storageRef);
 
             await setDoc(doc(db, 'users', user.uid), { coverUrl: downloadURL }, { merge: true });
-            // setCoverUrl(downloadURL);
+            setCoverUrl(downloadURL);
         };
         reader.readAsDataURL(croppedDataUrl); // преобразует Blob → base64
         const downloadURL = await getDownloadURL(storageRef);
         await setDoc(doc(db, 'users', user.uid), { coverUrl: downloadURL }, { merge: true });
-        // setCoverUrl(downloadURL);
+        setCoverUrl(downloadURL);
     };
 
-    // const handleDeleteCover = async () => {
-    //     if (!user) return;
-    //     const storage = getStorage();
-    //     const storageRef = ref(storage, `covers/${user.uid}`);
-    //     await deleteObject(storageRef).catch(() => {});
-    //     await setDoc(doc(db, 'users', user.uid), { coverUrl: '' }, { merge: true });
-    //     // setCoverUrl(null);
-    //     // setShowCoverEditor(false);
-    // };
+    const handleDeleteCover = async () => {
+        if (!user) return;
+        const storage = getStorage();
+        const storageRef = ref(storage, `covers/${user.uid}`);
+        await deleteObject(storageRef).catch(() => {});
+        await setDoc(doc(db, 'users', user.uid), { coverUrl: '' }, { merge: true });
+        setCoverUrl(null);
+        setShowCoverEditor(false);
+    };
 
-    // const handleDeleteLogo = async () => {
-    //     if (!user) return;
-    //     const storage = getStorage();
-    //     const storageRef = ref(storage, `logos/${user.uid}`);
-    //     await deleteObject(storageRef).catch(() => {});
-    //     await setDoc(doc(db, 'users', user.uid), { logoUrl: '' }, { merge: true });
-    //     // setLogoUrl(null);
-    //     // setShowLogoEditor(false);
-    // };
+    const handleDeleteLogo = async () => {
+        if (!user) return;
+        const storage = getStorage();
+        const storageRef = ref(storage, `logos/${user.uid}`);
+        await deleteObject(storageRef).catch(() => {});
+        await setDoc(doc(db, 'users', user.uid), { logoUrl: '' }, { merge: true });
+        setLogoUrl(null);
+        setShowLogoEditor(false);
+    };
     if (loading) {
         return (
             <div className="h-screen w-full flex items-center justify-center bg-black text-white">
@@ -188,6 +189,7 @@ const DashboardPage = () => {
     };
 
 
+
     return (
         <div className="min-h-screen w-full bg-black flex justify-center items-start overflow-auto pt-6">
             <div className="w-full sm:max-w-sm bg-white min-h-screen shadow-xl overflow-hidden relative">
@@ -212,38 +214,49 @@ const DashboardPage = () => {
                     <button onClick={handleLogout} className="text-sm underline flex-shrink-0">Выйти</button>
                 </div>
 
+                {showProfile && (
+                    <>
+                <div className="relative h-36 w-full">
+                    {coverUrl ? (
+                        <img src={coverUrl} alt="Обложка" className="absolute inset-0 object-cover w-full h-full" />
+                    ) : (
+                        <div className="absolute inset-0 bg-gradient-to-r from-lime-500 to-green-800"></div>
+                    )}
+                    <button
+                        onClick={() => setShowCoverEditor(true)}
+                        className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded"
+                    >
+                        Изменить обложку
+                    </button>
+                </div>
 
-                {/*<div className="relative h-36 w-full">*/}
-                {/*    {coverUrl ? (*/}
-                {/*        <img src={coverUrl} alt="Обложка" className="absolute inset-0 object-cover w-full h-full" />*/}
-                {/*    ) : (*/}
-                {/*        <div className="absolute inset-0 bg-gradient-to-r from-lime-500 to-green-800"></div>*/}
-                {/*    )}*/}
-                {/*    <button*/}
-                {/*        onClick={() => setShowCoverEditor(true)}*/}
-                {/*        className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded"*/}
-                {/*    >*/}
-                {/*        Изменить обложку*/}
-                {/*    </button>*/}
-                {/*</div>*/}
-
-                {/*<div className="relative -mt-10 mb-3 text-center">*/}
-                {/*    <div onClick={() => setShowLogoEditor(true)}>*/}
-                {/*        {logoUrl ? (*/}
-                {/*            <img*/}
-                {/*                src={logoUrl}*/}
-                {/*                alt="Лого"*/}
-                {/*                className="w-20 h-20 mx-auto rounded-full object-cover border-4 border-white cursor-pointer"*/}
-                {/*            />*/}
-                {/*        ) : (*/}
-                {/*            <div className="w-20 h-20 mx-auto rounded-full border-4 border-gray-300 flex items-center justify-center text-xs text-gray-400 bg-white/40 cursor-pointer">*/}
-                {/*                your logo*/}
-                {/*            </div>*/}
-                {/*        )}*/}
-                {/*    </div>*/}
-                {/*    <h2 className="mt-2 text-lg font-semibold">{orgName || 'Название организации'}</h2>*/}
-                {/*    <p className="text-sm text-gray-600">{orgAddress || 'Адрес организации'}</p>*/}
-                {/*</div>*/}
+                <div className="relative -mt-10 mb-3 text-center">
+                    <div onClick={() => setShowLogoEditor(true)}>
+                        {logoUrl ? (
+                            <img
+                                src={logoUrl}
+                                alt="Лого"
+                                className="w-20 h-20 mx-auto rounded-full object-cover border-4 border-white cursor-pointer"
+                            />
+                        ) : (
+                            <div className="w-20 h-20 mx-auto rounded-full border-4 border-gray-300 flex items-center justify-center text-xs text-gray-400 bg-white/40 cursor-pointer">
+                                your logo
+                            </div>
+                        )}
+                    </div>
+                    <h2 className="mt-2 text-lg font-semibold">{orgName || 'Название организации'}</h2>
+                    <p className="text-sm text-gray-600">{orgAddress || 'Адрес организации'}</p>
+                </div>
+                    </>
+                )}
+                <div className="text-center mb-4">
+                    <button
+                        onClick={() => setShowProfile((prev) => !prev)}
+                        className="text-sm text-gray-500 underline"
+                    >
+                        {showProfile ? 'Скрыть профиль' : 'Показать профиль'}
+                    </button>
+                </div>
 
                 <div className="px-4">
                     <div className="space-y-4">
@@ -296,97 +309,97 @@ const DashboardPage = () => {
                     />
                 )}
 
-                {/*{showCoverEditor && (*/}
-                {/*    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">*/}
-                {/*        <div className="bg-white rounded-lg p-4 space-y-4 w-72">*/}
-                {/*            <h3 className="text-center font-medium">Изменить обложку</h3>*/}
-                {/*            {coverUrl ? (*/}
-                {/*                <>*/}
-                {/*                    <button*/}
-                {/*                        onClick={() => document.getElementById('cover-upload').click()}*/}
-                {/*                        className="w-full py-2 bg-lime-500 text-white rounded"*/}
-                {/*                    >*/}
-                {/*                        Заменить фото*/}
-                {/*                    </button>*/}
-                {/*                    <button*/}
-                {/*                        onClick={handleDeleteCover}*/}
-                {/*                        className="w-full py-2 bg-red-500 text-white rounded"*/}
-                {/*                    >*/}
-                {/*                        Удалить обложку*/}
-                {/*                    </button>*/}
-                {/*                </>*/}
-                {/*            ) : (*/}
-                {/*                <>*/}
-                {/*                    <button*/}
-                {/*                        onClick={() => document.getElementById('cover-upload').click()}*/}
-                {/*                        className="w-full py-2 bg-lime-500 text-white rounded"*/}
-                {/*                    >*/}
-                {/*                        Загрузить фото*/}
-                {/*                    </button>*/}
-                {/*                </>*/}
-                {/*            )}*/}
-                {/*            <button*/}
-                {/*                onClick={() => setShowCoverEditor(false)}*/}
-                {/*                className="w-full py-2 bg-gray-200 rounded"*/}
-                {/*            >*/}
-                {/*                Отмена*/}
-                {/*            </button>*/}
-                {/*            <input*/}
-                {/*                id="cover-upload"*/}
-                {/*                type="file"*/}
-                {/*                accept="image/*"*/}
-                {/*                className="hidden"*/}
-                {/*                onChange={handleCoverChange}*/}
-                {/*            />*/}
-                {/*        </div>*/}
-                {/*    </div>*/}
-                {/*)}*/}
+                {showCoverEditor && (
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-4 space-y-4 w-72">
+                            <h3 className="text-center font-medium">Изменить обложку</h3>
+                            {coverUrl ? (
+                                <>
+                                    <button
+                                        onClick={() => document.getElementById('cover-upload').click()}
+                                        className="w-full py-2 bg-lime-500 text-white rounded"
+                                    >
+                                        Заменить фото
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteCover}
+                                        className="w-full py-2 bg-red-500 text-white rounded"
+                                    >
+                                        Удалить обложку
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => document.getElementById('cover-upload').click()}
+                                        className="w-full py-2 bg-lime-500 text-white rounded"
+                                    >
+                                        Загрузить фото
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                onClick={() => setShowCoverEditor(false)}
+                                className="w-full py-2 bg-gray-200 rounded"
+                            >
+                                Отмена
+                            </button>
+                            <input
+                                id="cover-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleCoverChange}
+                            />
+                        </div>
+                    </div>
+                )}
 
-                {/*{showLogoEditor && (*/}
-                {/*    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">*/}
-                {/*        <div className="bg-white rounded-lg p-4 space-y-4 w-72">*/}
-                {/*            <h3 className="text-center font-medium">Изменить логотип</h3>*/}
-                {/*            {logoUrl ? (*/}
-                {/*                <>*/}
-                {/*                    <button*/}
-                {/*                        onClick={() => document.getElementById('logo-upload-btn').click()}*/}
-                {/*                        className="w-full py-2 bg-lime-500 text-white rounded"*/}
-                {/*                    >*/}
-                {/*                        Заменить логотип*/}
-                {/*                    </button>*/}
-                {/*                    <button*/}
-                {/*                        onClick={handleDeleteLogo}*/}
-                {/*                        className="w-full py-2 bg-red-500 text-white rounded"*/}
-                {/*                    >*/}
-                {/*                        Удалить логотип*/}
-                {/*                    </button>*/}
-                {/*                </>*/}
-                {/*            ) : (*/}
-                {/*                <>*/}
-                {/*                    <button*/}
-                {/*                        onClick={() => document.getElementById('logo-upload-btn').click()}*/}
-                {/*                        className="w-full py-2 bg-lime-500 text-white rounded"*/}
-                {/*                    >*/}
-                {/*                        Загрузить логотип*/}
-                {/*                    </button>*/}
-                {/*                </>*/}
-                {/*            )}*/}
-                {/*            <button*/}
-                {/*                onClick={() => setShowLogoEditor(false)}*/}
-                {/*                className="w-full py-2 bg-gray-200 rounded"*/}
-                {/*            >*/}
-                {/*                Отмена*/}
-                {/*            </button>*/}
-                {/*            <input*/}
-                {/*                id="logo-upload-btn"*/}
-                {/*                type="file"*/}
-                {/*                accept="image/*"*/}
-                {/*                className="hidden"*/}
-                {/*                onChange={handleLogoChange}*/}
-                {/*            />*/}
-                {/*        </div>*/}
-                {/*    </div>*/}
-                {/*)}*/}
+                {showLogoEditor && (
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-4 space-y-4 w-72">
+                            <h3 className="text-center font-medium">Изменить логотип</h3>
+                            {logoUrl ? (
+                                <>
+                                    <button
+                                        onClick={() => document.getElementById('logo-upload-btn').click()}
+                                        className="w-full py-2 bg-lime-500 text-white rounded"
+                                    >
+                                        Заменить логотип
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteLogo}
+                                        className="w-full py-2 bg-red-500 text-white rounded"
+                                    >
+                                        Удалить логотип
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => document.getElementById('logo-upload-btn').click()}
+                                        className="w-full py-2 bg-lime-500 text-white rounded"
+                                    >
+                                        Загрузить логотип
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                onClick={() => setShowLogoEditor(false)}
+                                className="w-full py-2 bg-gray-200 rounded"
+                            >
+                                Отмена
+                            </button>
+                            <input
+                                id="logo-upload-btn"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleLogoChange}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
             {showAddBlock && (
                 <AddBlockModal
