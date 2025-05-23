@@ -51,6 +51,9 @@ const DashboardPage = () => {
                     setSlug(data.slug);
                     console.log('Загружен slug:', data.slug);
                 }
+                if (data.showProfile !== undefined) {
+                    setShowProfile(data.showProfile);
+                }
 
                 if (data.coverUrl) setCoverUrl(data.coverUrl);
                 if (data.orgName) setOrgName(data.orgName);
@@ -251,11 +254,16 @@ const DashboardPage = () => {
                 )}
                 <div className="text-center mb-4">
                     <button
-                        onClick={() => setShowProfile((prev) => !prev)}
+                        onClick={async () => {
+                            const updated = !showProfile;
+                            setShowProfile(updated);
+                            await setDoc(doc(db, 'users', user.uid), { showProfile: updated }, { merge: true });
+                        }}
                         className="text-sm text-gray-500 underline"
                     >
                         {showProfile ? 'Скрыть профиль' : 'Показать профиль'}
                     </button>
+
                 </div>
 
                 <div className="px-4">

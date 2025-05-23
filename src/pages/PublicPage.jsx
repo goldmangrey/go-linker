@@ -10,6 +10,7 @@ const PublicPage = () => {
     const [userData, setUserData] = useState(null);
     const [notFound, setNotFound] = useState(false);
     const [blocks, setBlocks] = useState([]);
+    const [showProfile, setShowProfile] = useState(true);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -29,6 +30,9 @@ const PublicPage = () => {
                 if (userSnap.exists()) {
                     const user = userSnap.data();
                     setUserData(user);
+                    if (user.showProfile !== undefined) {
+                        setShowProfile(user.showProfile);
+                    }
 
                     const blocksRef = collection(db, 'users', uid, 'blocks');
                     const blocksSnap = await getDocs(blocksRef);
@@ -66,6 +70,8 @@ const PublicPage = () => {
     return (
         <div className="min-h-screen bg-white text-gray-800">
             {/* Обложка + логотип */}
+            {showProfile && (
+                <>
             <div className="relative h-40 sm:h-48 bg-gray-200">
                 {userData.coverUrl && (
                     <img
@@ -89,7 +95,8 @@ const PublicPage = () => {
                 <h1 className="text-xl font-bold">{userData.orgName || 'Название'}</h1>
                 <p className="text-sm text-gray-500">{userData.orgAddress || 'Адрес'}</p>
             </div>
-
+        </>
+    )}
             {/* Контент */}
             <div className="mt-6 px-4 pb-10">
                 <BlockRenderer blocks={blocks} />
