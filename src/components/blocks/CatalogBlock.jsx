@@ -24,8 +24,9 @@ const CatalogBlock = ({ block, editable = false, onEdit}) => {
                 {products.map((product, idx) => (
                     <div
                         key={idx}
-                        className="min-w-[150px] bg-lime-100 p-3 rounded-lg shadow flex-shrink-0"
+                        className="w-40 sm:min-w-[150px] flex-shrink-0 bg-lime-100 p-3 rounded-lg shadow"
                     >
+
                         <img src={product.imageUrl} alt={product.name} className="rounded w-full h-24 object-cover mb-2" />
                         <h4 className="text-sm font-semibold">{product.name}</h4>
                         <p className="text-xs text-gray-600">{product.price} ₸</p>
