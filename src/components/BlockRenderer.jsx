@@ -1,6 +1,7 @@
 import React from 'react';
 import WhatsappBlock from './blocks/WhatsappBlock';
 import CatalogBlock from './blocks/CatalogBlock';
+import PromoBlock from './blocks/PromoBlock';
 import GalleryBlock from './blocks/GalleryBlock';
 
 const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
@@ -26,6 +27,16 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                             onEdit={onUpdate}
                         />
 
+                    )}
+
+                    {block.type === 'promo' && (
+                        <PromoBlock
+                            block={block}
+                            editable={editable}
+                            onEdit={onUpdate}
+                            onDelete={() => onDelete(index)}
+                            onMove={(dir) => onMove(index, dir)}
+                        />
                     )}
 
                     {block.type === 'gallery' && (

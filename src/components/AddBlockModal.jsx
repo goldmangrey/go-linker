@@ -62,7 +62,10 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                 return;
             }
             onAdd({ type: 'gallery', images, order: 9999 });
+        } else if (type === 'promo') {
+            onAdd({ type: 'promo', text: 'Новая акция!', expiresAt: '', order: 9999 });
         }
+
 
 
 
@@ -83,6 +86,7 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                     <option value="whatsapp">Кнопка</option>
                     <option value="catalog">Каталог</option>
                     <option value="gallery">Баннер</option>
+                    <option value="promo">Акция</option>
 
                 </select>
 

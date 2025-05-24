@@ -257,8 +257,61 @@ const DashboardPage = () => {
                             </div>
                         )}
                     </div>
-                    <h2 className="mt-2 text-lg font-semibold">{orgName || 'Название организации'}</h2>
-                    <p className="text-sm text-gray-600">{orgAddress || 'Адрес организации'}</p>
+                    <input
+                        value={orgName}
+                        onChange={(e) => setOrgName(e.target.value)}
+                        onBlur={async () => {
+                            await setDoc(doc(db, 'users', user.uid), { orgName }, { merge: true });
+                        }}
+                        placeholder="Название организации"
+                        className="mt-2 text-center w-full text-lg font-semibold border-b border-gray-300 focus:outline-none"
+                    />
+
+                    {Array.isArray(orgAddress) ? (
+                        <>
+                            {orgAddress.map((addr, idx) => (
+                                <input
+                                    key={idx}
+                                    value={addr}
+                                    onChange={(e) => {
+                                        const updated = [...orgAddress];
+                                        updated[idx] = e.target.value;
+                                        setOrgAddress(updated);
+                                    }}
+                                    onBlur={async () => {
+                                        await setDoc(doc(db, 'users', user.uid), { orgAddress }, { merge: true });
+                                    }}
+                                    placeholder={`Адрес №${idx + 1}`}
+                                    className="text-center w-full text-sm border-b border-gray-200 focus:outline-none mt-1"
+                                />
+                            ))}
+                            <button
+                                onClick={() => setOrgAddress([...orgAddress, ''])}
+                                className="text-xs text-blue-500 underline mt-2"
+                            >
+                                + Добавить адрес
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <input
+                                value={orgAddress}
+                                onChange={(e) => setOrgAddress(e.target.value)}
+                                onBlur={async () => {
+                                    await setDoc(doc(db, 'users', user.uid), { orgAddress }, { merge: true });
+                                }}
+                                placeholder="Адрес организации"
+                                className="text-center w-full text-sm border-b border-gray-300 focus:outline-none"
+                            />
+                            <button
+                                onClick={() => setOrgAddress([orgAddress, ''])}
+                                className="text-xs text-blue-500 underline mt-2"
+                            >
+                                + Добавить адрес
+                            </button>
+                        </>
+                    )}
+
                 </div>
                     </>
                 )}
