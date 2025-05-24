@@ -204,7 +204,7 @@ const DashboardPage = () => {
 
                     <div className="flex-grow text-center">
                         <a
-                            href={`https://go-linker.netlify.app/u/${slug || ''}`}
+                            href={`https://go-link.kz/u/${slug || ''}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`text-sm underline transition ${
@@ -292,7 +292,7 @@ const DashboardPage = () => {
                     </div>
                     {slug && (
                         <p className="text-center text-sm text-gray-500 mt-6">
-                            Ваша ссылка: <a href={`https://go-linker.netlify.app/u/${slug}`} className="text-lime-600 underline">go-linker.netlify.app/u/{slug}</a>
+                            Ваша ссылка: <a href={`https://go-link.kz/u/${slug}`} className="text-lime-600 underline">go-linker.netlify.app/u/{slug}</a>
                         </p>
                     )}
                 </div>

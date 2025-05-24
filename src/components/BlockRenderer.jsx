@@ -20,10 +20,11 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                         <CatalogBlock
                             block={block}
                             editable={editable}
-                            onUpdate={(updatedProducts) =>
-                                onUpdate && onUpdate(block, updatedProducts)
-                            }
+                            onDelete={() => onDelete(index)}
+                            onMove={(dir) => onMove(index, dir)}
+                            onEdit={onUpdate}
                         />
+
                     )}
 
 
