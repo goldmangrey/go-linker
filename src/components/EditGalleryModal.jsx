@@ -6,7 +6,6 @@ import ProductCropper from './ProductCropper';
 const EditGalleryModal = ({ block, onClose, onSave }) => {
     const [images, setImages] = useState(block.images || []);
     const [rawImage, setRawImage] = useState(null);
-    const [cropIndex, setCropIndex] = useState(null);
 
     const uploadImage = async (base64) => {
         const uid = auth.currentUser?.uid;
