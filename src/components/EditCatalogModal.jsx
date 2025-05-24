@@ -7,6 +7,7 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
     const [products, setProducts] = useState(block.products || []);
     const [title, setTitle] = useState(block.title || '');
     const [whatsappNumber, setWhatsappNumber] = useState(block.whatsappNumber || '');
+    const [layout, setLayout] = useState(block.layout || 'grid');
     const [cropIndex, setCropIndex] = useState(null);
     const [rawImage, setRawImage] = useState(null);
 
@@ -58,6 +59,18 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                     className="w-full border rounded px-2 py-1"
                 />
 
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium">Режим отображения:</label>
+                    <select
+                        value={layout}
+                        onChange={(e) => setLayout(e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                    >
+                        <option value="grid">Сетка (вниз)</option>
+                        <option value="scroll">Скролл (вбок)</option>
+                    </select>
+                </div>
+
                 {products.map((p, i) => (
                     <div key={i} className="border p-2 rounded space-y-1">
                         <input
@@ -105,7 +118,7 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                 <div className="flex justify-between pt-2">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Отмена</button>
                     <button
-                        onClick={() => onSave({ products, title, whatsappNumber })}
+                        onClick={() => onSave({ products, title, whatsappNumber, layout })}
                         className="bg-lime-500 text-white px-4 py-2 rounded"
                     >
                         Сохранить

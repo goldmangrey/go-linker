@@ -12,8 +12,16 @@ const ProductCropper = ({ image, onCancel, onCropDone }) => {
     }, []);
 
     const handleCrop = async () => {
-        const croppedImage = await getCroppedImg(image, croppedAreaPixels);
-        onCropDone(croppedImage);
+        const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
+
+// конвертируем Blob → base64
+        const reader = new FileReader();
+        reader.readAsDataURL(croppedBlob);
+        reader.onloadend = () => {
+            const base64data = reader.result;
+            onCropDone(base64data);
+        };
+
     };
 
     return (
