@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import BlockRenderer from '../components/BlockRenderer';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 const PublicPage = () => {
     const { slug } = useParams();
@@ -35,7 +35,7 @@ const PublicPage = () => {
                     }
 
                     const blocksRef = collection(db, 'users', uid, 'blocks');
-                    const blocksSnap = await getDocs(blocksRef);
+                    const blocksSnap = await getDocs(query(blocksRef, orderBy('order')));
                     const loadedBlocks = blocksSnap.docs.map(doc => doc.data());
                     setBlocks(loadedBlocks);
                 } else {

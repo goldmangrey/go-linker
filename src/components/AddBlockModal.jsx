@@ -50,8 +50,9 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                 link: buttonType === '2gis' ? number : ''
             });
         } else if (type === 'catalog') {
-            onAdd({ type, products });
+            onAdd({ type, products, order: 9999 }); // временное значение
         }
+
         onClose();
     };
 

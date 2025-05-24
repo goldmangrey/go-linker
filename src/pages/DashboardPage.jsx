@@ -167,24 +167,29 @@ const DashboardPage = () => {
 
     const handleMoveBlock = async (index, direction) => {
         const newBlocks = [...blocks];
-        const targetIndex = index + direction;
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
         if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
 
-        // Переставляем
+        // меняем местами
         [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
 
-        // Обновляем порядок в памяти
-        const reordered = newBlocks.map((block, i) => ({
-            ...block,
-            order: i
+        // обновляем order
+        const updated = newBlocks.map((b, idx) => ({
+            ...b,
+            order: idx,
         }));
-        setBlocks(reordered);
 
-        // Сохраняем порядок в Firestore
-        for (const block of reordered) {
-            await setDoc(doc(db, 'users', user.uid, 'blocks', block.id), block);
+        setBlocks(updated);
+
+        // сохраняем в Firestore
+        for (const block of updated) {
+            if (block.id) {
+                await setDoc(doc(db, 'users', user.uid, 'blocks', block.id), block);
+            }
         }
     };
+
 
     const handleUpdateBlock = async (updatedBlock) => {
         await setDoc(doc(db, 'users', user.uid, 'blocks', updatedBlock.id), updatedBlock);
