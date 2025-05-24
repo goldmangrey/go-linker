@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase/firebase';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy  } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -33,44 +33,45 @@ const DashboardPage = () => {
                 navigate('/signin');
                 return;
             }
+
             const docRef = doc(db, 'users', firebaseUser.uid);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 const blocksRef = collection(db, 'users', firebaseUser.uid, 'blocks');
-                const blocksSnap = await getDocs(blocksRef);
-                const loadedBlocks = blocksSnap.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                const blocksQuery = query(blocksRef, orderBy('order'));
+                const blocksSnap = await getDocs(blocksQuery);
+
+                const loadedBlocks = blocksSnap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
 
                 setBlocks(loadedBlocks);
                 setUser({ ...firebaseUser, ...data });
-                if (data.slug) setSlug(data.slug);
+
                 if (data.slug) {
                     setSlug(data.slug);
                     console.log('Загружен slug:', data.slug);
                 }
-                if (data.showProfile !== undefined) {
-                    setShowProfile(data.showProfile);
-                }
 
+                if (data.showProfile !== undefined) setShowProfile(data.showProfile);
                 if (data.coverUrl) setCoverUrl(data.coverUrl);
                 if (data.logoUrl) setLogoUrl(data.logoUrl);
                 if (data.orgName) setOrgName(data.orgName);
                 if (data.orgAddress) setOrgAddress(data.orgAddress);
 
-                setLoading(false); // ✅ переместили внутрь блока
+                setLoading(false);
             } else {
-                // fallback, если нет данных
                 setUser(firebaseUser);
                 setLoading(false);
             }
-
-
         });
+
         return () => unsubscribe();
     }, [navigate]);
+
 
     const handleLogout = async () => {
         await signOut(auth);
@@ -166,29 +167,31 @@ const DashboardPage = () => {
     };
 
     const handleMoveBlock = async (index, direction) => {
-        const newBlocks = [...blocks];
         const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
-        if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
+        if (targetIndex < 0 || targetIndex >= blocks.length) return;
 
-        // меняем местами
-        [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
+        const newBlocks = [...blocks];
+        const temp = newBlocks[index];
+        newBlocks[index] = newBlocks[targetIndex];
+        newBlocks[targetIndex] = temp;
 
-        // обновляем order
-        const updated = newBlocks.map((b, idx) => ({
-            ...b,
-            order: idx,
+        // Обновляем order
+        const reordered = newBlocks.map((block, idx) => ({
+            ...block,
+            order: idx
         }));
 
-        setBlocks(updated);
+        setBlocks(reordered);
 
-        // сохраняем в Firestore
-        for (const block of updated) {
+        // Сохраняем порядок в Firestore
+        for (const block of reordered) {
             if (block.id) {
                 await setDoc(doc(db, 'users', user.uid, 'blocks', block.id), block);
             }
         }
     };
+
 
 
     const handleUpdateBlock = async (updatedBlock) => {

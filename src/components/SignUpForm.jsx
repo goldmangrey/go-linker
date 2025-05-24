@@ -5,6 +5,7 @@ import { auth, db } from '../firebase/firebase';
 import { useNavigate } from 'react-router-dom';
 
 const SignUpForm = () => {
+    const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [orgName, setOrgName] = useState('');
@@ -13,6 +14,7 @@ const SignUpForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const uid = userCredential.user.uid;
@@ -52,6 +54,7 @@ const SignUpForm = () => {
             navigate('/dashboard');
         } catch (error) {
             console.error('Ошибка регистрации:', error.message);
+            setLoading(false);
         }
     };
 
@@ -101,10 +104,16 @@ const SignUpForm = () => {
 
                 <button
                     type="submit"
-                    className="w-full py-3 bg-lime-400 text-black font-semibold rounded-lg hover:bg-lime-500 transition"
+                    disabled={loading}
+                    className={`w-full py-3 rounded-lg font-semibold transition ${
+                        loading
+                            ? 'bg-gray-400 text-gray-800 cursor-not-allowed'
+                            : 'bg-lime-400 text-black hover:bg-lime-500'
+                    }`}
                 >
-                    Зарегистрироваться
+                    {loading ? 'Регистрируем...' : 'Зарегистрироваться'}
                 </button>
+
             </form>
         </div>
     );

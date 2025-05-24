@@ -1,6 +1,7 @@
 import React from 'react';
 import WhatsappBlock from './blocks/WhatsappBlock';
 import CatalogBlock from './blocks/CatalogBlock';
+import GalleryBlock from './blocks/GalleryBlock';
 
 const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
     return (
@@ -27,6 +28,13 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
 
                     )}
 
+                    {block.type === 'gallery' && (
+                        <GalleryBlock
+                            block={block}
+                            editable={editable}
+                            onEdit={onUpdate}
+                        />
+                    )}
 
 
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
 import { auth } from '../firebase/firebase';
+import ProductCropper from './ProductCropper';
 
 const AddBlockModal = ({ onClose, onAdd }) => {
     const [buttonType, setButtonType] = useState('whatsapp');
@@ -8,6 +9,10 @@ const AddBlockModal = ({ onClose, onAdd }) => {
     const [color, setColor] = useState('#25D366');
 
     const [type, setType] = useState('');
+    const [rawImage, setRawImage] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [images, setImages] = useState([]);
+
     const [number, setNumber] = useState('');
     const [products, setProducts] = useState([{ name: '', imageUrl: '', price: '' }]);
     const uploadImageToStorage = async (file) => {
@@ -51,7 +56,15 @@ const AddBlockModal = ({ onClose, onAdd }) => {
             });
         } else if (type === 'catalog') {
             onAdd({ type, products, order: 9999 }); // временное значение
+        } else if (type === 'gallery') {
+            if (loading || images.length === 0) {
+                alert('😢 Пожалуйста, дождитесь загрузки фото баннера');
+                return;
+            }
+            onAdd({ type: 'gallery', images, order: 9999 });
         }
+
+
 
         onClose();
     };
@@ -69,6 +82,8 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                     <option value="">Выберите тип</option>
                     <option value="whatsapp">Кнопка</option>
                     <option value="catalog">Каталог</option>
+                    <option value="gallery">Баннер</option>
+
                 </select>
 
                 {type === 'whatsapp' && (
@@ -147,6 +162,38 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                     </div>
                 )}
 
+                {type === 'gallery' && (
+                    <div className="space-y-2">
+                        {images.length < 1 && (
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    setRawImage(URL.createObjectURL(e.target.files[0]));
+                                }}
+                                className="w-full"
+                            />
+                        )}
+
+                        {loading && (
+                            <p className="text-center text-yellow-600 animate-pulse text-sm">⏳ Загрузка баннера...</p>
+                        )}
+
+                        {!loading && images.length === 0 && (
+                            <p className="text-center text-gray-400 text-sm">😢 Баннер ещё не загружен</p>
+                        )}
+
+                        {images[0] && (
+                            <img
+                                src={images[0]}
+                                alt=""
+                                className="w-full h-32 object-cover rounded"
+                            />
+                        )}
+                    </div>
+                )}
+
+
                 <div className="flex justify-between">
                     <button
                         onClick={onClose}
@@ -162,6 +209,29 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                     </button>
                 </div>
             </div>
+            {rawImage && (
+                <ProductCropper
+                    image={rawImage}
+                    aspect={3 / 1}
+                    onCancel={() => {
+                        setRawImage(null);
+                    }}
+                    onCropDone={async (cropped) => {
+                        const uid = auth.currentUser?.uid;
+                        if (!uid) return;
+
+                        setLoading(true);
+                        const storage = getStorage();
+                        const fileRef = ref(storage, `gallery/${uid}/${Date.now()}.jpg`);
+                        await uploadString(fileRef, cropped, 'data_url');
+                        const url = await getDownloadURL(fileRef);
+                        setImages((prev) => [...prev, url]);
+                        setLoading(false);
+                        setRawImage(null);
+                    }}
+                />
+            )}
+
         </div>
     );
 };
