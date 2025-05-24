@@ -8,11 +8,14 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
     const [title, setTitle] = useState(block.title || '');
     const [whatsappNumber, setWhatsappNumber] = useState(block.whatsappNumber || '');
     const [layout, setLayout] = useState(block.layout || 'grid');
+    const [buttonColor, setButtonColor] = useState(block.buttonColor || 'bg-green-500');
     const [cropIndex, setCropIndex] = useState(null);
     const [rawImage, setRawImage] = useState(null);
+    const [loadingStates, setLoadingStates] = useState(new Array(products.length).fill(false));
 
     const handleAddProduct = () => {
         setProducts([...products, { name: '', price: '', imageUrl: '' }]);
+        setLoadingStates([...loadingStates, false]);
     };
 
     const handleChange = (index, field, value) => {
@@ -23,13 +26,21 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
 
     const handleDeleteProduct = (index) => {
         const updated = [...products];
+        const loading = [...loadingStates];
         updated.splice(index, 1);
+        loading.splice(index, 1);
         setProducts(updated);
+        setLoadingStates(loading);
     };
 
     const uploadImage = async (base64, index) => {
         const uid = auth.currentUser?.uid;
         if (!uid || !base64) return;
+
+        const loadingCopy = [...loadingStates];
+        loadingCopy[index] = true;
+        setLoadingStates(loadingCopy);
+
         const storage = getStorage();
         const fileRef = ref(storage, `products/${uid}/${Date.now()}.jpg`);
         await uploadString(fileRef, base64, 'data_url');
@@ -38,12 +49,31 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
         const updated = [...products];
         updated[index].imageUrl = url;
         setProducts(updated);
+
+        loadingCopy[index] = false;
+        setLoadingStates([...loadingCopy]);
+    };
+
+    const handleSave = () => {
+        if (loadingStates.includes(true)) {
+            alert('😢 Пожалуйста, подождите — загружается фото товара...');
+            return;
+        }
+        onSave({ products, title, whatsappNumber, layout, buttonColor });
     };
 
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
             <div className="bg-white p-4 rounded-lg space-y-4 w-full max-w-md max-h-[90vh] overflow-y-auto">
-                <h2 className="text-lg font-bold text-center">Редактировать каталог</h2>
+                <div className="relative">
+                    <h2 className="text-lg font-bold text-center">Редактировать каталог</h2>
+                    <button
+                        onClick={onClose}
+                        className="absolute top-0 right-0 text-xl text-gray-500 hover:text-black"
+                    >
+                        ✕
+                    </button>
+                </div>
 
                 <input
                     value={title}
@@ -71,6 +101,21 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                     </select>
                 </div>
 
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium">Цвет кнопки «Купить»:</label>
+                    <div className="flex flex-wrap gap-2">
+                        {['bg-green-500', 'bg-blue-500', 'bg-orange-500', 'bg-rose-500', 'bg-gray-800'].map(color => (
+                            <button
+                                key={color}
+                                type="button"
+                                onClick={() => setButtonColor(color)}
+                                className={`w-6 h-6 rounded-full border-2 ${color} ${buttonColor === color ? 'ring-2 ring-black' : ''}`}
+                                title={color}
+                            />
+                        ))}
+                    </div>
+                </div>
+
                 {products.map((p, i) => (
                     <div key={i} className="border p-2 rounded space-y-1">
                         <input
@@ -95,7 +140,10 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                             }}
                             className="w-full"
                         />
-                        {p.imageUrl && (
+                        {loadingStates[i] && (
+                            <p className="text-sm text-yellow-600 animate-pulse">Загрузка изображения...</p>
+                        )}
+                        {p.imageUrl && !loadingStates[i] && (
                             <img
                                 src={p.imageUrl}
                                 alt="preview"
@@ -118,7 +166,7 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                 <div className="flex justify-between pt-2">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Отмена</button>
                     <button
-                        onClick={() => onSave({ products, title, whatsappNumber, layout })}
+                        onClick={handleSave}
                         className="bg-lime-500 text-white px-4 py-2 rounded"
                     >
                         Сохранить

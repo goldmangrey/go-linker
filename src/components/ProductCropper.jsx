@@ -13,27 +13,24 @@ const ProductCropper = ({ image, onCancel, onCropDone }) => {
 
     const handleCrop = async () => {
         const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
-
-// конвертируем Blob → base64
         const reader = new FileReader();
         reader.readAsDataURL(croppedBlob);
         reader.onloadend = () => {
             const base64data = reader.result;
             onCropDone(base64data);
         };
-
     };
 
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
             <div className="bg-white rounded-lg p-4 w-[90vw] max-w-md space-y-4">
                 <h2 className="text-center font-bold">Обрезать изображение</h2>
-                <div className="relative w-full h-64 bg-gray-100">
+                <div className="relative w-full h-72 bg-gray-100">
                     <Cropper
                         image={image}
                         crop={crop}
                         zoom={zoom}
-                        aspect={1}
+                        aspect={3 / 4}
                         onCropChange={setCrop}
                         onZoomChange={setZoom}
                         onCropComplete={onCropComplete}

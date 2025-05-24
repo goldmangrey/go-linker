@@ -7,6 +7,7 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
     const products = block.products || [];
     const title = block.title || 'Хиты продаж';
     const whatsappNumber = block.whatsappNumber || '';
+    const buttonColor = block.buttonColor || 'bg-green-500';
     const layout = block.layout || 'grid';
 
     const openWhatsapp = (product) => {
@@ -43,13 +44,15 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
                                 src={product.imageUrl}
                                 alt={product.name}
                                 className="w-full h-40 object-cover"
+
                             />
                             <div className="p-3">
                                 <h4 className="text-sm font-semibold truncate">{product.name}</h4>
                                 <p className="text-xs text-gray-600">{product.price} ₸</p>
                                 <button
                                     onClick={() => openWhatsapp(product)}
-                                    className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white text-xs py-1 rounded shadow"
+                                    className={`mt-2 w-full ${buttonColor} text-white text-xs py-1 rounded shadow`}
+
                                 >
                                     Купить
                                 </button>
@@ -68,14 +71,14 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
                                 <img
                                     src={product.imageUrl}
                                     alt={product.name}
-                                    className="w-full h-40 object-cover"
+                                    className="w-full h-60 object-cover"
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white p-3">
                                     <h4 className="text-sm font-semibold truncate">{product.name}</h4>
                                     <p className="text-xs text-gray-200">{product.price} ₸</p>
                                     <button
                                         onClick={() => openWhatsapp(product)}
-                                        className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white text-xs py-1 rounded shadow"
+                                        className={`mt-2 w-full ${buttonColor} text-white text-xs py-1 rounded shadow`}
                                     >
                                         Купить
                                     </button>
