@@ -292,7 +292,7 @@ const DashboardPage = () => {
                     </div>
                     {slug && (
                         <p className="text-center text-sm text-gray-500 mt-6">
-                            Ваша ссылка: <a href={`https://go-link.kz/u/${slug}`} className="text-lime-600 underline">go-linker.netlify.app/u/{slug}</a>
+                            Ваша ссылка: <a href={`https://go-link.kz/u/${slug}`} className="text-lime-600 underline">go-link.kz/u/{slug}</a>
                         </p>
                     )}
                 </div>

@@ -36,8 +36,9 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
                     {products.map((product, idx) => (
                         <div
                             key={idx}
-                            className="min-w-[150px] bg-white rounded-2xl overflow-hidden shadow-xl flex-shrink-0 transform transition hover:scale-[1.02]"
+                            className="w-40 sm:min-w-[150px] bg-white rounded-2xl overflow-hidden shadow-xl flex-shrink-0 transform transition hover:scale-[1.02]"
                         >
+
                             <img
                                 src={product.imageUrl}
                                 alt={product.name}
