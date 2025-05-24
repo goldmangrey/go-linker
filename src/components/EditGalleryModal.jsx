@@ -65,7 +65,6 @@ const EditGalleryModal = ({ block, onClose, onSave }) => {
                         accept="image/*"
                         onChange={(e) => {
                             setRawImage(URL.createObjectURL(e.target.files[0]));
-                            setCropIndex(0);
                         }}
                         className="w-full"
                     />
@@ -88,12 +87,10 @@ const EditGalleryModal = ({ block, onClose, onSave }) => {
                     aspect={3 / 1}
                     onCancel={() => {
                         setRawImage(null);
-                        setCropIndex(null);
                     }}
                     onCropDone={(cropped) => {
                         uploadImage(cropped);
                         setRawImage(null);
-                        setCropIndex(null);
                     }}
                 />
             )}
