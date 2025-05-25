@@ -4,10 +4,19 @@ const EditButtonModal = ({ block, onClose, onSave }) => {
     const [type, setType] = useState(block.type || 'whatsapp');
     const [label, setLabel] = useState(block.label || 'Открыть');
     const [number, setNumber] = useState(block.number || '');
+    const [numberError, setNumberError] = useState('');
     const [color, setColor] = useState(block.color || '#25D366');
     // const [link, setLink] = useState(block.link || '');
 
     const handleSave = () => {
+        const isPhoneValid = type === 'whatsapp' ? /^7\d{10}$/.test(number) : true;
+        if (!isPhoneValid) {
+            setNumberError('Номер должен начинаться с 7 и содержать 11 цифр без пробелов');
+            return;
+        }
+
+        setNumberError('');
+
         onSave({
             ...block,
             type,
@@ -18,6 +27,7 @@ const EditButtonModal = ({ block, onClose, onSave }) => {
         });
         onClose();
     };
+
 
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
@@ -40,6 +50,9 @@ const EditButtonModal = ({ block, onClose, onSave }) => {
                     onChange={(e) => setNumber(e.target.value)}
                     className="w-full border rounded px-3 py-2"
                 />
+                {numberError && (
+                    <p className="text-sm text-red-600 mt-1">{numberError}</p>
+                )}
 
                 <input
                     type="text"

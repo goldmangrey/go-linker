@@ -7,6 +7,7 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
     const [products, setProducts] = useState(block.products || []);
     const [title, setTitle] = useState(block.title || '');
     const [whatsappNumber, setWhatsappNumber] = useState(block.whatsappNumber || '');
+    const [numberError, setNumberError] = useState('');
     const [layout, setLayout] = useState(block.layout || 'grid');
     const [buttonColor, setButtonColor] = useState(block.buttonColor || 'bg-green-500');
     const [cropIndex, setCropIndex] = useState(null);
@@ -59,8 +60,18 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
             alert('😢 Пожалуйста, подождите — загружается фото товара...');
             return;
         }
+
+        const isPhoneValid = /^7\d{10}$/.test(whatsappNumber);
+        if (!isPhoneValid) {
+            setNumberError('Номер должен начинаться с 7 и содержать 11 цифр без пробелов');
+            return;
+        }
+
+        setNumberError('');
+
         onSave({ products, title, whatsappNumber, layout, buttonColor });
     };
+
 
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
@@ -88,6 +99,9 @@ const EditCatalogModal = ({ block, onClose, onSave }) => {
                     placeholder="Номер WhatsApp (например, 77081234567)"
                     className="w-full border rounded px-2 py-1"
                 />
+                {numberError && (
+                    <p className="text-sm text-red-600 mt-1">{numberError}</p>
+                )}
 
                 <div className="space-y-1">
                     <label className="block text-sm font-medium">Режим отображения:</label>
