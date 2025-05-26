@@ -12,9 +12,11 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
 
     const openWhatsapp = (product) => {
         const base = `https://wa.me/${whatsappNumber}`;
-        const text = `?text=Здравствуйте, интересует товар: ${encodeURIComponent(product.name)}`;
+        const message = `Здравствуйте! Хочу заказать букет «${product.name}» за ${product.price} ₸`;
+        const text = `?text=${encodeURIComponent(message)}`;
         window.open(base + text, '_blank');
     };
+
 
     const visibleProducts = layout === 'grid' ? products.slice(0, visibleCount) : products;
 
