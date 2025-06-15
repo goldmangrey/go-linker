@@ -96,7 +96,7 @@ const BouquetBlock = ({ block, onUpdate, editable }) => {
                 <div className="flex overflow-x-auto space-x-4 pb-3 mb-2">
                     {flowers.map((f) => (
                         <div key={f.id} className={`w-32 shrink-0 border rounded-lg p-2 flex flex-col items-center text-center transition-all ${selected[f.id] ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
-                            <img src={f.image} alt={f.name} className="w-16 h-16 object-contain mb-1" />
+                            <img src={f.imageUrl} alt={f.name} className="w-16 h-16 object-contain mb-1" />
                             <span className="text-sm font-medium h-10 flex items-center">{f.name}</span>
                             <span className="text-xs text-gray-600 mb-2">{f.price} ₸</span>
 
@@ -126,7 +126,7 @@ const BouquetBlock = ({ block, onUpdate, editable }) => {
                     <div className="flex overflow-x-auto space-x-3 pb-2">
                         {wrappings.map((w) => (
                             <button key={w.id} onClick={() => setWrapping(w)} className={`shrink-0 border rounded-lg p-2 text-sm flex items-center gap-2 transition-all ${wrapping?.id === w.id ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
-                                <img src={w.image} alt={w.name} className="w-10 h-10 object-contain" />
+                                <img src={w.imageUrl} alt={w.name} className="w-10 h-10 object-contain" />
                                 <span className="font-medium">{w.name} – {w.price} ₸</span>
                             </button>
                         ))}

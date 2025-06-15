@@ -1,13 +1,12 @@
 import React from 'react';
 
 const BouquetPreview = ({ selected, flowers, selectedWrapping, wrappings, onClear }) => {
-    const wrapperImg = selectedWrapping
-        ? wrappings.find((w) => w.id === selectedWrapping)?.image
-        : null;
+    const wrapperImg = selectedWrapping ? wrappings.find((w) => w.id === selectedWrapping)?.imageUrl : null;
+
 
     const selectedFlowers = Object.entries(selected).flatMap(([id, count]) => {
         const flower = flowers.find((f) => f.id === id);
-        return flower ? Array(count).fill(flower.image) : [];
+        return flower ? Array(count).fill(flower.imageUrl) : [];
     });
 
     return (

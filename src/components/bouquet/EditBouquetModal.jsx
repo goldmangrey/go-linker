@@ -1,163 +1,140 @@
-import React, { useState, useEffect, useCallback } from 'react'; // 1. Добавили useCallback
-import { db } from '../../firebase/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from 'firebase/firestore';
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
+import React, { useState, useEffect } from 'react';
+import { db } from '../../firebase/firebase'; // Убедитесь, что этот путь правильный
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { wrappings as masterWrappings } from '../../data/wrappings';
 
-const ItemManager = ({ collectionName, title }) => {
-    const [items, setItems] = useState([]);
+const EditBouquetModal = ({ initialData, onClose, onSave }) => {
+    const [masterFlowers, setMasterFlowers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentItem, setCurrentItem] = useState(null);
 
-    // 2. Обернули fetchData в useCallback
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        const q = query(collection(db, collectionName), orderBy('name'));
-        const querySnapshot = await getDocs(q);
-        setItems(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setLoading(false);
-    }, [collectionName]); // Указали зависимость для useCallback
+    const [selectedFlowers, setSelectedFlowers] = useState(initialData.flowers || []);
+    const [selectedWrappings, setSelectedWrappings] = useState(initialData.wrappings || []);
+    const [whatsappNumber, setWhatsappNumber] = useState(initialData.whatsappNumber || '');
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]); // 3. Теперь зависимость useEffect - это сама функция fetchData
+        const fetchFlowers = async () => {
+            setLoading(true);
+            try {
+                const flowersQuery = query(collection(db, 'master_flowers'), where('isActive', '==', true), orderBy('name'));
+                const flowersSnap = await getDocs(flowersQuery);
+                setMasterFlowers(flowersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                // Эта ошибка появится в консоли, если индекс не создан
+                console.error("Ошибка загрузки справочников:", error);
+            }
+            setLoading(false);
+        };
+        fetchFlowers();
+    }, []);
 
-    const handleSave = async (itemData) => {
-        if (currentItem) {
-            const itemRef = doc(db, collectionName, currentItem.id);
-            await updateDoc(itemRef, itemData);
+    const toggleFlower = (flower) => {
+        const isSelected = selectedFlowers.some(sf => sf.id === flower.id);
+        if (isSelected) {
+            setSelectedFlowers(prev => prev.filter(sf => sf.id !== flower.id));
         } else {
-            await addDoc(collection(db, collectionName), itemData);
-        }
-        fetchData();
-        setIsModalOpen(false);
-        setCurrentItem(null);
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm("Вы уверены, что хотите удалить этот элемент?")) {
-            await deleteDoc(doc(db, collectionName, id));
-            fetchData();
+            setSelectedFlowers(prev => [...prev, { ...flower }]);
         }
     };
 
-    const openModal = (item = null) => {
-        setCurrentItem(item);
-        setIsModalOpen(true);
-    };
-
-    if (loading) return <p>Загрузка...</p>;
-
-    return (
-        <div>
-            <button onClick={() => openModal()} className="mb-4 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
-                + Добавить {title}
-            </button>
-            <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100">
-                <tr>
-                    <th className="p-2">Изображение</th>
-                    <th className="p-2">Название</th>
-                    <th className="p-2">Цена (₸)</th>
-                    <th className="p-2">Статус</th>
-                    <th className="p-2 text-right">Действия</th>
-                </tr>
-                </thead>
-                <tbody className="divide-y">
-                {items.map(item => (
-                    <tr key={item.id}>
-                        <td className="p-2"><img src={item.imageUrl} alt={item.name} className="w-10 h-10 object-contain rounded bg-gray-50 p-1"/></td>
-                        <td className="p-2 font-medium">{item.name}</td>
-                        <td className="p-2">{item.price}</td>
-                        <td className="p-2">
-                                <span className={`px-2 py-1 text-xs rounded-full ${item.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                    {item.isActive ? 'Активен' : 'Скрыт'}
-                                </span>
-                        </td>
-                        <td className="p-2 text-right">
-                            <button onClick={() => openModal(item)} className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-2">Ред.</button>
-                            <button onClick={() => handleDelete(item.id)} className="text-xs bg-red-600 text-white px-2 py-1 rounded">Удалить</button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-            {isModalOpen && <ItemModal item={currentItem} onSave={handleSave} onClose={() => setIsModalOpen(false)} collectionName={collectionName} />}
-        </div>
-    );
-};
-
-// ... (код ItemModal и DirectoryManager остается без изменений) ...
-
-const ItemModal = ({ item, onClose, onSave, collectionName }) => {
-    const [name, setName] = useState(item?.name || '');
-    const [price, setPrice] = useState(item?.price || 0);
-    const [isActive, setIsActive] = useState(item?.isActive === undefined ? true : item.isActive);
-    const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(item?.imageUrl || null);
-    const [uploading, setUploading] = useState(false);
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+    const toggleWrapping = (wrapping) => {
+        const isSelected = selectedWrappings.some(sw => sw.id === wrapping.id);
+        if (isSelected) {
+            setSelectedWrappings(prev => prev.filter(sw => sw.id !== wrapping.id));
+        } else {
+            setSelectedWrappings(prev => [...prev, { ...wrapping }]);
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setUploading(true);
-        let imageUrl = item?.imageUrl || '';
+    const updateFlowerPrice = (id, price) => {
+        setSelectedFlowers(prev => prev.map(f => f.id === id ? { ...f, price: Number(price) } : f));
+    };
 
-        if (imageFile) {
-            const storage = getStorage();
-            const storageRef = ref(storage, `directories/${collectionName}/${Date.now()}-${imageFile.name}`);
-            await uploadString(storageRef, imagePreview, 'data_url');
-            imageUrl = await getDownloadURL(storageRef);
-        }
+    const updateWrappingPrice = (id, price) => {
+        setSelectedWrappings(prev => prev.map(w => w.id === id ? { ...w, price: Number(price) } : w));
+    };
 
-        onSave({ name, price, isActive, imageUrl });
-        setUploading(false);
+    const handleSaveClick = () => {
+        onSave({
+            flowers: selectedFlowers,
+            wrappings: selectedWrappings,
+            whatsappNumber: whatsappNumber
+        });
     };
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 className="text-lg font-bold mb-4">{item ? 'Редактировать' : 'Добавить'} элемент</h3>
-                <div className="space-y-4">
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Название" className="w-full border p-2 rounded" required />
-                    <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="Цена" className="w-full border p-2 rounded" required />
-                    <label className="flex items-center gap-2">
-                        <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-                        <span>Активен (виден пользователям)</span>
-                    </label>
-                    <div>
-                        <p className="text-sm mb-1">Изображение:</p>
-                        <input type="file" accept="image/png, image/jpeg" onChange={handleImageChange} className="text-sm" />
-                        {imagePreview && <img src={imagePreview} alt="preview" className="w-20 h-20 mt-2 object-contain border rounded"/>}
-                    </div>
+            <div className="bg-white w-full max-w-2xl rounded-lg p-6 relative max-h-[90vh] overflow-y-auto">
+                <button onClick={onClose} className="absolute right-4 top-4 text-gray-500 hover:text-black">✕</button>
+                <h2 className="text-lg font-semibold mb-4">Настройка конструктора букета</h2>
+
+                {loading ? <p>Загрузка ассортимента...</p> : (
+                    <>
+                        {/* Раздел ЦВЕТЫ */}
+                        <div className="mb-6">
+                            <h3 className="text-base font-medium mb-2">Выберите цветы, доступные в этом блоке</h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {masterFlowers.map((flower) => {
+                                    const activeItem = selectedFlowers.find(sf => sf.id === flower.id);
+                                    return (
+                                        <div key={flower.id} className={`border p-2 rounded-lg text-sm flex flex-col items-center text-center transition-all ${activeItem ? 'border-green-500 bg-green-50' : ''}`}>
+                                            <img src={flower.imageUrl} alt={flower.name} className="w-16 h-16 object-contain mb-1"/>
+                                            <label className="flex items-center gap-2 font-medium">
+                                                <input type="checkbox" checked={!!activeItem} onChange={() => toggleFlower(flower)}/>
+                                                {flower.name}
+                                            </label>
+                                            {activeItem && (
+                                                <div className="mt-2 w-full">
+                                                    <label className="text-xs text-gray-600">Цена (₸)</label>
+                                                    <input type="number" className="w-full mt-1 border px-2 py-1 text-sm rounded text-center" value={activeItem.price} onChange={(e) => updateFlowerPrice(flower.id, e.target.value)} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Раздел УПАКОВКИ */}
+                        <div className="mb-6">
+                            <h3 className="text-base font-medium mb-2">Выберите упаковки</h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {masterWrappings.map((wrapping) => {
+                                    const activeItem = selectedWrappings.find(sw => sw.id === wrapping.id);
+                                    return (
+                                        <div key={wrapping.id} className={`border p-2 rounded-lg text-sm flex flex-col items-center text-center transition-all ${activeItem ? 'border-green-500 bg-green-50' : ''}`}>
+                                            <img src={wrapping.imageUrl} alt={wrapping.name} className="w-16 h-16 object-contain mb-1"/>
+                                            <label className="flex items-center gap-2 font-medium">
+                                                <input type="checkbox" checked={!!activeItem} onChange={() => toggleWrapping(wrapping)}/>
+                                                {wrapping.name}
+                                            </label>
+                                            {activeItem && (
+                                                <div className="mt-2 w-full">
+                                                    <label className="text-xs text-gray-600">Цена (₸)</label>
+                                                    <input type="number" className="w-full mt-1 border px-2 py-1 text-sm rounded text-center" value={activeItem.price} onChange={(e) => updateWrappingPrice(wrapping.id, e.target.value)} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Раздел WhatsApp */}
+                        <div className="border-t pt-4 mt-4">
+                            <h3 className="text-sm font-medium mb-2">Номер для заказов WhatsApp</h3>
+                            <input type="tel" className="w-full border px-2 py-1 text-sm rounded" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, ''))} placeholder="Например: 77083180696"/>
+                            <p className="text-xs text-gray-500 mt-1">Введите номер телефона без "+", пробелов и скобок.</p>
+                        </div>
+                    </>
+                )}
+
+                <div className="text-right mt-6">
+                    <button onClick={handleSaveClick} className="bg-green-600 text-white px-5 py-2 rounded text-sm font-semibold hover:bg-green-700 disabled:bg-gray-400" disabled={loading}>
+                        💾 Сохранить изменения
+                    </button>
                 </div>
-                <div className="flex justify-end gap-3 mt-6">
-                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded text-sm">Отмена</button>
-                    <button type="submit" disabled={uploading} className="px-4 py-2 bg-green-600 text-white rounded text-sm">{uploading ? 'Сохранение...' : 'Сохранить'}</button>
-                </div>
-            </form>
+            </div>
         </div>
     );
 };
-
-const DirectoryManager = () => {
-    return (
-        <div className="bg-white rounded-lg p-4 shadow">
-            <h3 className="text-lg font-bold text-gray-700 mb-4">Управление справочниками</h3>
-            <ItemManager collectionName="master_flowers" title="цветок" />
-        </div>
-    );
-};
-
-export default DirectoryManager;
+export default EditBouquetModal;
