@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // 1. Добавили useCallback
 import { db } from '../firebase/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 
-// ... (код ItemManager и ItemModal остается без изменений) ...
 const ItemManager = ({ collectionName, title }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
 
-    const fetchData = async () => {
+    // 2. Обернули fetchData в useCallback
+    const fetchData = useCallback(async () => {
         setLoading(true);
         const q = query(collection(db, collectionName), orderBy('name'));
         const querySnapshot = await getDocs(q);
         setItems(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         setLoading(false);
-    };
+    }, [collectionName]); // Указали зависимость для useCallback
 
     useEffect(() => {
         fetchData();
-    }, [collectionName]);
+    }, [fetchData]); // 3. Теперь зависимость useEffect - это сама функция fetchData
 
     const handleSave = async (itemData) => {
         if (currentItem) {
@@ -87,6 +87,8 @@ const ItemManager = ({ collectionName, title }) => {
     );
 };
 
+// ... (код ItemModal и DirectoryManager остается без изменений) ...
+
 const ItemModal = ({ item, onClose, onSave, collectionName }) => {
     const [name, setName] = useState(item?.name || '');
     const [price, setPrice] = useState(item?.price || 0);
@@ -149,13 +151,10 @@ const ItemModal = ({ item, onClose, onSave, collectionName }) => {
     );
 };
 
-
-// Основной компонент-обертка
 const DirectoryManager = () => {
     return (
         <div className="bg-white rounded-lg p-4 shadow">
             <h3 className="text-lg font-bold text-gray-700 mb-4">Управление справочниками</h3>
-            {/* Единственная вкладка - Цветы */}
             <ItemManager collectionName="master_flowers" title="цветок" />
         </div>
     );
