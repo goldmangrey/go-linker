@@ -3,6 +3,7 @@ import WhatsappBlock from './blocks/WhatsappBlock';
 import CatalogBlock from './blocks/CatalogBlock';
 import PromoBlock from './blocks/PromoBlock';
 import GalleryBlock from './blocks/GalleryBlock';
+import BouquetBlock from './blocks/BouquetBlock';
 
 const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
     return (
@@ -38,7 +39,15 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                             onMove={(dir) => onMove(index, dir)}
                         />
                     )}
-
+                    {block.type === 'bouquet' && (
+                        <BouquetBlock
+                            block={block}
+                            editable={editable}
+                            onUpdate={onUpdate}
+                            onDelete={() => onDelete(index)}
+                            onMove={(dir) => onMove(index, dir)}
+                        />
+                    )}
                     {block.type === 'gallery' && (
                         <GalleryBlock
                             block={block}

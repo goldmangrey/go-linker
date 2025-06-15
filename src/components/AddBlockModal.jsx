@@ -3,7 +3,8 @@ import { getStorage, ref, uploadBytes, uploadString, getDownloadURL } from 'fire
 import { auth } from '../firebase/firebase';
 import ProductCropper from './ProductCropper';
 
-const AddBlockModal = ({ onClose, onAdd }) => {
+
+const AddBlockModal = ({ onClose, onAdd, user }) => {
     const [buttonType, setButtonType] = useState('whatsapp');
     const [label, setLabel] = useState('Открыть');
     const [color, setColor] = useState('#25D366');
@@ -64,11 +65,15 @@ const AddBlockModal = ({ onClose, onAdd }) => {
             onAdd({ type: 'gallery', images, order: 9999 });
         } else if (type === 'promo') {
             onAdd({ type: 'promo', text: 'Новая акция!', expiresAt: '', order: 9999 });
+        } else if (type === 'bouquet') {
+            onAdd({
+                type: 'bouquet',
+                flowers: [],
+                wrappings: [],
+                whatsappNumber: '', // Добавляем пустое поле для номера
+                order: 9999,
+            });
         }
-
-
-
-
         onClose();
     };
 
@@ -87,7 +92,9 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                     <option value="catalog">Каталог</option>
                     <option value="gallery">Баннер</option>
                     <option value="promo">Акция</option>
-
+                    <option value="bouquet" disabled={!(user?.subscriptionExpiresAt?.toDate() > new Date())}>
+                        Конструктор букета (PRO)
+                    </option>
                 </select>
 
                 {type === 'whatsapp' && (
@@ -125,6 +132,7 @@ const AddBlockModal = ({ onClose, onAdd }) => {
                         />
                     </div>
                 )}
+
 
 
                 {type === 'catalog' && (

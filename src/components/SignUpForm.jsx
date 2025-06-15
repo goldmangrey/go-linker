@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc, getDoc, collection, addDoc } from 'firebase/firestore';
+import { setDoc, doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,9 +35,9 @@ const SignUpForm = () => {
                 orgAddress,
                 logoUrl: '/assets/yourlogo.png',
                 coverUrl: '',
-                slug: finalSlug // ✅ ключ должен быть slug
+                slug: finalSlug,
+                createdAt: Timestamp.now() // <--- ДОБАВЛЕНО ЭТО ПОЛЕ
             });
-
 
             await setDoc(doc(db, 'slugs', finalSlug), {
                 uid
