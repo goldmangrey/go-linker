@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase/firebase';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
+// --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, updateDoc, writeBatch } from 'firebase/firestore';import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import ImageCropper from '../components/ImageCropper';
 import CoverCropper from '../components/CoverCropper';
 import BlockRenderer from "../components/BlockRenderer";
 import AddBlockModal from '../components/AddBlockModal';
-import AdminPanel from '../components/AdminPanel'; // Убедитесь, что импорт AdminPanel есть
+import AdminPanel from '../components/AdminPanel';
 
 const DashboardPage = () => {
     const [user, setUser] = useState(null);
@@ -25,52 +25,63 @@ const DashboardPage = () => {
     const navigate = useNavigate();
     const [slug, setSlug] = useState('');
     const [showAddBlock, setShowAddBlock] = useState(false);
-    const [showProfile, setShowProfile] = useState(true);
 
+    // Эффект №1: Отвечает ТОЛЬКО за определение пользователя
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (!firebaseUser) {
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+                // Пользователь вошел в систему, сохраняем его базовые данные
+                setUser({ uid: firebaseUser.uid, email: firebaseUser.email });
+            } else {
+                // Пользователь вышел
                 navigate('/signin');
-                return;
             }
+        });
+        return () => unsubscribe(); // Отписываемся при размонтировании
+    }, [navigate]);
 
-            const docRef = doc(db, 'users', firebaseUser.uid);
+// Эффект №2: Отвечает ТОЛЬКО за загрузку данных, когда пользователь определен
+    useEffect(() => {
+        if (!user?.uid) return; // Не делать ничего, если нет UID пользователя
+
+        const fetchData = async () => {
+            setLoading(true);
+            const docRef = doc(db, 'users', user.uid);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                setUser({ uid: firebaseUser.uid, ...data });
+                // Обновляем стейт пользователя полными данными из Firestore
+                setUser(prevUser => ({ ...prevUser, ...data }));
 
-                // Если это не админ, загружаем его блоки
                 if (data.role !== 'admin') {
-                    const blocksRef = collection(db, 'users', firebaseUser.uid, 'blocks');
+                    const blocksRef = collection(db, 'users', user.uid, 'blocks');
                     const blocksQuery = query(blocksRef, orderBy('order'));
                     const blocksSnap = await getDocs(blocksQuery);
                     const loadedBlocks = blocksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setBlocks(loadedBlocks);
 
-                    if (data.slug) setSlug(data.slug);
-                    if (data.showProfile !== undefined) setShowProfile(data.showProfile);
-                    if (data.coverUrl) setCoverUrl(data.coverUrl);
-                    if (data.logoUrl) setLogoUrl(data.logoUrl);
-                    if (data.orgName) setOrgName(data.orgName);
-                    if (data.orgAddress) setOrgAddress(data.orgAddress);
+// Ничего не делаем здесь, так как showProfile уже есть в 'data'
+// которую мы добавляем в объект user парой строк выше.
+                    setSlug(data.slug || '');
+                    setCoverUrl(data.coverUrl || null);
+                    setLogoUrl(data.logoUrl || null);
+                    setOrgName(data.orgName || '');
+                    setOrgAddress(data.orgAddress || '');
                 }
             }
             setLoading(false);
-        });
+        };
 
-        return () => unsubscribe();
-    }, [navigate]);
+        fetchData();
+    }, [user?.uid]); // Этот эффект перезапустится, только если сменится UID пользователя
 
     const handleLogout = async () => {
         await signOut(auth);
         navigate('/signin');
     };
 
-    // --- Все остальные хендлеры (handleLogoChange, handleCoverChange и т.д.) остаются без изменений ---
-    // --- Копипаст не требуется, они уже включены в финальный код ниже ---
-
+    // --- (остальные хендлеры без изменений) ---
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -81,7 +92,6 @@ const DashboardPage = () => {
         };
         reader.readAsDataURL(file);
     };
-
     const handleCoverChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -92,7 +102,6 @@ const DashboardPage = () => {
         };
         reader.readAsDataURL(file);
     };
-
     const handleUploadLogo = async (croppedDataUrl) => {
         if (!croppedDataUrl || !user) return;
         const storage = getStorage();
@@ -102,7 +111,6 @@ const DashboardPage = () => {
         await setDoc(doc(db, 'users', user.uid), { logoUrl: downloadURL }, { merge: true });
         setLogoUrl(downloadURL);
     };
-
     const handleUploadCover = async (croppedDataUrl) => {
         if (!croppedDataUrl || !user) return;
         const storage = getStorage();
@@ -118,7 +126,6 @@ const DashboardPage = () => {
         };
         reader.readAsDataURL(croppedDataUrl);
     };
-
     const handleDeleteCover = async () => {
         if (!user) return;
         const storage = getStorage();
@@ -128,7 +135,6 @@ const DashboardPage = () => {
         setCoverUrl(null);
         setShowCoverEditor(false);
     };
-
     const handleDeleteLogo = async () => {
         if (!user) return;
         const storage = getStorage();
@@ -138,7 +144,6 @@ const DashboardPage = () => {
         setLogoUrl(null);
         setShowLogoEditor(false);
     };
-
     const handleDeleteBlock = async (index) => {
         const block = blocks[index];
         if (!block.id) return;
@@ -146,69 +151,86 @@ const DashboardPage = () => {
         setBlocks(blocks.filter((_, i) => i !== index));
     };
 
+
+    // 3. ИСПРАВЛЕННАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ БЛОКОВ
     const handleMoveBlock = async (index, direction) => {
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= blocks.length) return;
+        if (!user) return;
+        const newIndex = index + direction;
+
+        if (newIndex < 0 || newIndex >= blocks.length) {
+            return;
+        }
 
         const newBlocks = [...blocks];
-        [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
+        const [movedBlock] = newBlocks.splice(index, 1);
+        newBlocks.splice(newIndex, 0, movedBlock);
 
-        const reordered = newBlocks.map((block, idx) => ({ ...block, order: idx }));
-        setBlocks(reordered);
+        setBlocks(newBlocks);
 
-        for (const block of reordered) {
-            if (block.id) {
-                await setDoc(doc(db, 'users', user.uid, 'blocks', block.id), { order: block.order }, { merge: true });
-            }
+        // Обновление 'order' в Firestore
+        const batch = writeBatch(db);
+        newBlocks.forEach((block, idx) => {
+            const blockRef = doc(db, 'users', user.uid, 'blocks', block.id);
+            batch.update(blockRef, { order: idx });
+        });
+
+        try {
+            await batch.commit();
+        } catch (error) {
+            console.error("Ошибка при обновлении порядка блоков: ", error);
+            // В случае ошибки, можно вернуть блоки в исходное состояние
+            setBlocks(blocks);
         }
     };
 
     const handleUpdateBlock = async (updatedBlock) => {
-        await setDoc(doc(db, 'users', user.uid, 'blocks', updatedBlock.id), updatedBlock);
+        await setDoc(doc(db, 'users', user.uid, 'blocks', updatedBlock.id), updatedBlock, { merge: true });
         setBlocks((prev) => prev.map((b) => (b.id === updatedBlock.id ? updatedBlock : b)));
     };
 
+    // 4. НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВИДИМОСТИ ПРОФИЛЯ
+    const handleToggleProfileVisibility = async () => {
+        if (!user?.uid) return;
+
+        const newVisibility = !(user.showProfile === undefined ? true : user.showProfile);
+
+        // 1. Оптимистично обновляем UI
+        setUser(currentUser => ({...currentUser, showProfile: newVisibility}));
+
+        // 2. Отправляем изменения в базу
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, { showProfile: newVisibility });
+        } catch (error) {
+            console.error("Ошибка при сохранении видимости профиля:", error);
+            // 3. В случае ошибки откатываем изменение в UI
+            setUser(currentUser => ({...currentUser, showProfile: !newVisibility}));
+        }
+    };
+
     if (loading) {
-        return (
-            <div className="h-screen w-full flex items-center justify-center bg-black text-white">
-                <p className="text-lg animate-pulse">Загрузка...</p>
-            </div>
-        );
+        return <div className="h-screen w-full flex items-center justify-center bg-black text-white"><p className="text-lg animate-pulse">Загрузка...</p></div>;
     }
 
-    // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ЗДЕСЬ ---
     return (
         <div className="min-h-screen w-full bg-gray-100 flex justify-center items-start overflow-auto">
             <div className={`w-full bg-white min-h-screen shadow-xl ${user?.role === 'admin' ? 'sm:max-w-5xl' : 'sm:max-w-sm'}`}>
-                {/* Общая шапка для всех */}
                 <div className="bg-black text-white flex items-center justify-between px-4 py-3 z-20 relative">
                     <h1 className="text-lg font-bold flex-shrink-0">Go-Link</h1>
                     <button onClick={handleLogout} className="text-sm underline flex-shrink-0">Выйти</button>
                 </div>
 
-                {/* --- УСЛОВНЫЙ РЕНДЕРИНГ: АДМИН ИЛИ ПОЛЬЗОВАТЕЛЬ --- */}
                 {user?.role === 'admin' ? (
-                    // --- ВИД ДЛЯ АДМИНИСТРАТОРА ---
-                    <div className="p-4">
-                        <AdminPanel />
-                    </div>
+                    <div className="p-4"><AdminPanel /></div>
                 ) : (
-                    // --- ВИД ДЛЯ ОБЫЧНОГО ПОЛЬЗОВАТЕЛЯ ---
                     <>
                         <div className="text-center bg-gray-800 text-white py-2">
-                            <a
-                                href={`/u/${slug || ''}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`text-sm underline transition ${
-                                    slug ? 'text-lime-400 hover:text-lime-300' : 'text-gray-500 pointer-events-none'
-                                }`}
-                            >
+                            <a href={`/u/${slug || ''}`} target="_blank" rel="noopener noreferrer" className={`text-sm underline transition ${slug ? 'text-lime-400 hover:text-lime-300' : 'text-gray-500 pointer-events-none'}`}>
                                 {slug ? `go-link.kz/u/${slug}` : 'Ссылка не задана'}
                             </a>
                         </div>
 
-                        {showProfile && (
+                        {(user.showProfile === undefined ? true : user.showProfile) && (
                             <>
                                 <div className="relative h-36 w-full">
                                     {coverUrl ? <img src={coverUrl} alt="Обложка" className="absolute inset-0 object-cover w-full h-full" /> : <div className="absolute inset-0 bg-gradient-to-r from-lime-500 to-green-800"></div>}
@@ -223,10 +245,10 @@ const DashboardPage = () => {
                                 </div>
                             </>
                         )}
-
+                        {/* 5. Подключаем новую функцию к кнопке */}
                         <div className="text-center mb-4">
-                            <button onClick={async () => { const updated = !showProfile; setShowProfile(updated); await setDoc(doc(db, 'users', user.uid), { showProfile: updated }, { merge: true }); }} className="text-sm text-gray-500 underline">
-                                {showProfile ? 'Скрыть профиль' : 'Показать профиль'}
+                            <button onClick={handleToggleProfileVisibility} className="text-sm text-gray-500 underline">
+                                {(user.showProfile === undefined ? true : user.showProfile) ? 'Скрыть профиль' : 'Показать профиль'}
                             </button>
                         </div>
 
@@ -239,7 +261,7 @@ const DashboardPage = () => {
                     </>
                 )}
 
-                {/* Модальные окна остаются общими */}
+                {/* Модальные окна */}
                 {rawLogoImage && <ImageCropper image={rawLogoImage} onCancel={() => setRawLogoImage(null)} onCropDone={async (cropped) => { setRawLogoImage(null); await handleUploadLogo(cropped); }} />}
                 {rawCoverImage && <CoverCropper image={rawCoverImage} onCancel={() => setRawCoverImage(null)} onCropDone={async (cropped) => { setRawCoverImage(null); await handleUploadCover(cropped); }} />}
                 {showCoverEditor && (
@@ -271,3 +293,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
