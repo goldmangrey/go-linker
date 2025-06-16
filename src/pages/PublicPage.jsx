@@ -28,15 +28,17 @@ const PublicPage = () => {
                 const userSnap = await getDoc(userRef);
 
                 if (userSnap.exists()) {
-                    const user = userSnap.data();
-                    setUserData(user);
-                    if (user.showProfile !== undefined) {
-                        setShowProfile(user.showProfile);
+                    // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+                    // Мы объединяем ID пользователя (uid) с остальными данными его профиля.
+                    setUserData({ uid, ...userSnap.data() });
+
+                    if (userSnap.data().showProfile !== undefined) {
+                        setShowProfile(userSnap.data().showProfile);
                     }
 
                     const blocksRef = collection(db, 'users', uid, 'blocks');
                     const blocksSnap = await getDocs(query(blocksRef, orderBy('order')));
-                    const loadedBlocks = blocksSnap.docs.map(doc => doc.data());
+                    const loadedBlocks = blocksSnap.docs.map(doc => ({id: doc.id, ...doc.data()})); // Также добавил ID для блоков
                     setBlocks(loadedBlocks);
                 } else {
                     setNotFound(true);
@@ -50,6 +52,7 @@ const PublicPage = () => {
 
         fetchUser();
     }, [slug]);
+
 
     if (notFound) {
         return (
@@ -100,7 +103,7 @@ const PublicPage = () => {
     )}
             {/* Контент */}
             <div className="mt-6 px-4 pb-10">
-                <BlockRenderer blocks={blocks} />
+                <BlockRenderer blocks={blocks} ownerId={userData?.uid} />
             </div>
         </div>
     );

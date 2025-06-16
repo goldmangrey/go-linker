@@ -225,6 +225,15 @@ const DashboardPage = () => {
                 ) : (
                     <>
                         <div className="text-center bg-gray-800 text-white py-2">
+                            <div className="p-4">
+                                <div
+                                    className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                                    onClick={() => navigate('/manage')}
+                                >
+                                    <h3 className="font-bold text-lg">Центр управления</h3>
+                                    <p className="text-sm opacity-90">Просмотр заказов, управление статусами и аналитика.</p>
+                                </div>
+                            </div>
                             <a href={`/u/${slug || ''}`} target="_blank" rel="noopener noreferrer" className={`text-sm underline transition ${slug ? 'text-lime-400 hover:text-lime-300' : 'text-gray-500 pointer-events-none'}`}>
                                 {slug ? `go-link.kz/u/${slug}` : 'Ссылка не задана'}
                             </a>

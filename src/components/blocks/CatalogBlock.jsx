@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import EditCatalogModal from '../EditCatalogModal';
+import { db } from '../../firebase/firebase'; // 1. Импортируем
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
-const CatalogBlock = ({ block, editable = false, onEdit }) => {
+const CatalogBlock = ({ block, editable = false, onEdit, ownerId }) => { // 2. Принимаем ownerId
     const [showEditor, setShowEditor] = useState(false);
     const [visibleCount, setVisibleCount] = useState(6);
     const products = block.products || [];
@@ -9,7 +11,34 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
     const whatsappNumber = block.whatsappNumber || '';
     const buttonColor = block.buttonColor || 'bg-green-500';
     const layout = block.layout || 'grid';
+    const [orderingProductId, setOrderingProductId] = useState(null); // 3. Состояние для загрузки
+    const handleOrder = async (product) => {
+        if (!whatsappNumber || !ownerId) return;
 
+        setOrderingProductId(product.id);
+
+        const orderData = {
+            items: [{ name: product.name, quantity: 1, price: product.price }],
+            totalPrice: product.price,
+            customerPhone: whatsappNumber.replace(/\D/g, ''),
+            status: 'new',
+            createdAt: Timestamp.now()
+        };
+
+        try {
+            const ordersRef = collection(db, 'users', ownerId, 'orders');
+            await addDoc(ordersRef, orderData);
+
+            const message = `Здравствуйте! Хочу заказать «${product.name}» за ${product.price} ₸`;
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        } catch (error) {
+            console.error("Ошибка при создании заказа из каталога:", error);
+            alert("Не удалось создать заказ. Попробуйте снова.");
+        } finally {
+            setOrderingProductId(null);
+        }
+    };
     const openWhatsapp = (product) => {
         const base = `https://wa.me/${whatsappNumber}`;
         const message = `Здравствуйте! Хочу заказать букет «${product.name}» за ${product.price} ₸%0AФото: ${product.imageUrl}`;
@@ -53,11 +82,11 @@ const CatalogBlock = ({ block, editable = false, onEdit }) => {
                                 <h4 className="text-sm font-semibold truncate">{product.name}</h4>
                                 <p className="text-xs text-gray-600">{product.price} ₸</p>
                                 <button
-                                    onClick={() => openWhatsapp(product)}
-                                    className={`mt-2 w-full ${buttonColor} text-white text-xs py-1 rounded shadow`}
-
+                                    onClick={() => handleOrder(product)}
+                                    disabled={orderingProductId === product.id}
+                                    className={`mt-2 w-full ${buttonColor} text-white text-xs py-1 rounded shadow disabled:bg-gray-400`}
                                 >
-                                    Купить
+                                    {orderingProductId === product.id ? '...' : 'Купить'}
                                 </button>
                             </div>
                         </div>

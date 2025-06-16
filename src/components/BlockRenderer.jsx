@@ -5,7 +5,7 @@ import PromoBlock from './blocks/PromoBlock';
 import GalleryBlock from './blocks/GalleryBlock';
 import BouquetBlock from './blocks/BouquetBlock';
 
-const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate }) => {
+const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate, ownerId }) => {
     return (
         <div className="space-y-4">
             {blocks.map((block, index) => (
@@ -26,6 +26,7 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                             onDelete={() => onDelete(index)}
                             onMove={(dir) => onMove(index, dir)}
                             onEdit={onUpdate}
+                            ownerId={ownerId}
                         />
 
                     )}
@@ -46,6 +47,7 @@ const BlockRenderer = ({ blocks, editable = false, onDelete, onMove, onUpdate })
                             onUpdate={onUpdate}
                             onDelete={() => onDelete(index)}
                             onMove={(dir) => onMove(index, dir)}
+                            ownerId={ownerId}
                         />
                     )}
                     {block.type === 'gallery' && (

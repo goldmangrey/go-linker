@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import BouquetPreview from '../bouquet/BouquetPreview';
 import EditBouquetModal from '../bouquet/EditBouquetModal';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../../firebase/firebase'; // 1. Импортируем db
 
 const QUICK_ADD_IDS = ['roses', 'euro']; // ID красной и белой розы из flowers.js
-const BouquetBlock = ({ block, onUpdate, editable }) => {
+const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
     const bouquetData = block?.data || {};
 
     const [flowers, setFlowers] = useState(bouquetData.flowers || []);
@@ -11,6 +13,7 @@ const BouquetBlock = ({ block, onUpdate, editable }) => {
     const [selected, setSelected] = useState(bouquetData.selected || {});
     const [wrapping, setWrapping] = useState(bouquetData.wrapping || null);
     const [editOpen, setEditOpen] = useState(false);
+    const [isOrdering, setIsOrdering] = useState(false);
 
     useEffect(() => {
         const newData = block?.data || {};
@@ -64,28 +67,51 @@ const BouquetBlock = ({ block, onUpdate, editable }) => {
 
         setEditOpen(false);
     };
-    const handleOrderClick = () => {
+    const handleOrderClick = async () => {
         const whatsAppNumber = block.data?.whatsappNumber;
-        if (!whatsAppNumber) return;
+        if (!whatsAppNumber || !ownerId) return;
 
-        let message = "Здравствуйте! Хочу заказать букет:\n\n";
-        message += "Состав:\n";
+        setIsOrdering(true);
 
-        Object.entries(selected).forEach(([id, count]) => {
+        // Формируем состав заказа
+        const items = Object.entries(selected).map(([id, count]) => {
             const flower = flowers.find((f) => f.id === id);
-            if (flower && count > 0) {
-                message += `- ${flower.name} × ${count}\n`;
-            }
+            return { name: flower?.name || 'Неизвестный цветок', quantity: count, price: flower?.price || 0 };
         });
 
         if (wrapping) {
-            message += `\nУпаковка: ${wrapping.name}\n`;
+            items.push({ name: wrapping.name, quantity: 1, price: wrapping.price });
         }
 
-        message += `\n*Итого: ${total} ₸*`;
+        // Создаем объект заказа
+        const orderData = {
+            items,
+            totalPrice: total,
+            customerPhone: whatsAppNumber.replace(/\D/g, ''),
+            status: 'new', // Статус по умолчанию
+            createdAt: Timestamp.now()
+        };
 
-        const encodedMessage = encodeURIComponent(message);
-        window.open(`https://wa.me/${whatsAppNumber}?text=${encodedMessage}`, '_blank');
+        try {
+            // Сохраняем заказ в Firestore
+            const ordersRef = collection(db, 'users', ownerId, 'orders');
+            await addDoc(ordersRef, orderData);
+
+            // Формируем и открываем сообщение в WhatsApp
+            let message = "Здравствуйте! Хочу заказать букет:\n\n";
+            items.forEach(item => {
+                message += `- ${item.name} × ${item.quantity}\n`;
+            });
+            message += `\n*Итого: ${total} ₸*`;
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${whatsAppNumber}?text=${encodedMessage}`, '_blank');
+
+        } catch (error) {
+            console.error("Ошибка при создании заказа:", error);
+            alert("Не удалось создать заказ. Попробуйте снова.");
+        } finally {
+            setIsOrdering(false);
+        }
     };
     return (
         <div className="p-4 bg-white rounded-xl border">
@@ -175,10 +201,10 @@ const BouquetBlock = ({ block, onUpdate, editable }) => {
                 <div className="mt-6 border-t pt-4">
                     <button
                         onClick={handleOrderClick}
-                        className="w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition-all flex items-center justify-center gap-2"
+                        disabled={isOrdering}
+                        className="w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400"
                     >
-
-                        Заказать через WhatsApp
+                        {isOrdering ? 'Создание заказа...' : 'Заказать через WhatsApp'}
                     </button>
                 </div>
             )}
