@@ -14,7 +14,9 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
     const [wrapping, setWrapping] = useState(bouquetData.wrapping || null);
     const [editOpen, setEditOpen] = useState(false);
     const [isOrdering, setIsOrdering] = useState(false);
-
+// --- НОВОЕ: Состояние для доставки ---
+    const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'delivery' или 'pickup'
+    const deliveryOptions = bouquetData.deliveryOptions || { delivery: 2500, pickup: 0 };
     useEffect(() => {
         const newData = block?.data || {};
         setFlowers(newData.flowers || []);
@@ -46,25 +48,22 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
             [f.id]: amount,
         }));
     };
-    const total =
-        Object.entries(selected).reduce((sum, [id, count]) => {
-            const f = flowers.find((f) => f.id === id);
-            return sum + (f?.price || 0) * count;
-        }, 0) + (wrapping?.price || 0);
+    const bouquetTotal = Object.entries(selected).reduce((sum, [id, count]) => {
+        const f = flowers.find((f) => f.id === id);
+        return sum + (f?.price || 0) * count;
+    }, 0) + (wrapping?.price || 0);
+
+    const deliveryCost = deliveryMethod === 'delivery' ? (deliveryOptions.delivery?.price || 0) : (deliveryOptions.pickup?.price || 0);    const total = bouquetTotal + deliveryCost;
 
     const handleSaveChanges = (dataFromModal) => {
-        // dataFromModal теперь содержит полные, готовые к сохранению данные
         const newBlockData = {
             ...bouquetData,
-            flowers: dataFromModal.flowers,
-            wrappings: dataFromModal.wrappings,
-            whatsappNumber: dataFromModal.whatsappNumber
+            ...dataFromModal // Просто копируем все данные из модалки
         };
 
         if (onUpdate) {
             onUpdate({ ...block, data: newBlockData });
         }
-
         setEditOpen(false);
     };
     // Код после изменений
@@ -84,10 +83,15 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
             items.push({ name: wrapping.name, quantity: 1, price: wrapping.price });
         }
 
-        // Создаем объект заказа
+        const deliveryInfo = {
+            name: deliveryMethod === 'delivery' ? 'Доставка' : 'Самовывоз',
+            price: deliveryCost
+        };
+
         const orderData = {
             items,
             totalPrice: total,
+            delivery: deliveryInfo, // Добавляем инфо о доставке
             customerPhone: whatsAppNumber.replace(/\D/g, ''),
             status: 'new',
             createdAt: Timestamp.now()
@@ -98,7 +102,8 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
         items.forEach(item => {
             message += `- ${item.name} × ${item.quantity}\n`;
         });
-        message += `\n*Итого: ${total} ₸*`;
+        message += `\n*Способ получения: ${deliveryInfo.name} (+${deliveryInfo.price} ₸)*`;
+        message += `\n*Итого к оплате: ${total} ₸*`;
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${whatsAppNumber}?text=${encodedMessage}`, '_blank');
 
@@ -183,7 +188,26 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
                     <p className="text-sm text-gray-500">Добавьте цветы или выберите упаковку, чтобы увидеть предпросмотр.</p>
                 </div>
             )}
-
+            {/* --- НОВЫЙ БЛОК: Выбор способа получения --- */}
+            <div className="border-t pt-4 mt-4">
+                <h3 className="text-sm font-semibold mb-2">Способ получения:</h3>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setDeliveryMethod('delivery')}
+                        className={`flex-1 text-sm border rounded-lg p-2 text-center transition-all ${deliveryMethod === 'delivery' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
+                    >
+                        <span className="font-medium">Доставка</span>
+                        <span className="block text-xs text-gray-600">+{deliveryOptions.delivery?.price || 0} ₸</span>
+                    </button>
+                    <button
+                        onClick={() => setDeliveryMethod('pickup')}
+                        className={`flex-1 text-sm border rounded-lg p-2 text-center transition-all ${deliveryMethod === 'pickup' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
+                    >
+                        <span className="font-medium">Самовывоз</span>
+                        <span className="block text-xs text-gray-600">+{deliveryOptions.pickup?.price || 0} ₸</span>
+                    </button>
+                </div>
+            </div>
             <div className="border-t pt-4 mt-4">
                 <h3 className="text-sm font-semibold mb-1">Состав букета:</h3>
                 {Object.keys(selected).length === 0 ? (
@@ -197,7 +221,11 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
                     </ul>
                 )}
                 {wrapping && <p className="text-sm mt-1">Упаковка: {wrapping.name} – {wrapping.price} ₸</p>}
-                <p className="mt-2 font-semibold">Итого: {total} ₸</p>
+                <p className="text-sm mt-1">Стоимость букета: {bouquetTotal} ₸</p>
+                <p className="text-sm mt-1">
+                    {deliveryMethod === 'delivery' ? 'Доставка' : 'Самовывоз'}: +{deliveryCost} ₸
+                </p>
+                <p className="mt-2 font-bold text-base">Итого к оплате: {total} ₸</p>
             </div>
             {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Кнопка заказа --- */}
             {block.data?.whatsappNumber && Object.keys(selected).length > 0 && (
@@ -221,11 +249,7 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
 
             {editOpen && (
                 <EditBouquetModal
-                    initialData={{
-                        flowers,
-                        wrappings,
-                        whatsappNumber: bouquetData.whatsappNumber
-                    }}
+                    initialData={bouquetData} // Передаем все данные блока
                     onClose={() => setEditOpen(false)}
                     onSave={handleSaveChanges}
                 />
