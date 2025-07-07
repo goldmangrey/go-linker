@@ -12,6 +12,12 @@ export const wrappings = [
         imageUrl: '/img/rose-pink.png',
     },
     {
+        id: 'mini-grey',
+        name: 'Серая упаковка S',
+        price: 500,
+        imageUrl: '/img/grey-small.png',
+    },
+    {
         id: 'pink',
         name: 'Розовая упаковка M',
         price: 800,
@@ -22,5 +28,11 @@ export const wrappings = [
         name: 'Белая упаковка M',
         price: 800,
         imageUrl: '/img/большая-белая.png',
+    },
+    {
+        id: 'm-grey',
+        name: 'Серая упаковка M',
+        price: 800,
+        imageUrl: '/img/grey-medium.png',
     },
 ];
