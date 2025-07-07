@@ -17,6 +17,7 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
 // --- НОВОЕ: Состояние для доставки ---
     const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'delivery' или 'pickup'
     const deliveryOptions = bouquetData.deliveryOptions || { delivery: 2500, pickup: 0 };
+
     useEffect(() => {
         const newData = block?.data || {};
         setFlowers(newData.flowers || []);
@@ -53,8 +54,8 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
         return sum + (f?.price || 0) * count;
     }, 0) + (wrapping?.price || 0);
 
-    const deliveryCost = deliveryMethod === 'delivery' ? (deliveryOptions.delivery?.price || 0) : (deliveryOptions.pickup?.price || 0);    const total = bouquetTotal + deliveryCost;
-
+    const deliveryCost = deliveryMethod === 'delivery' ? (deliveryOptions.delivery || 0) : (deliveryOptions.pickup || 0);
+    const total = bouquetTotal + deliveryCost;
     const handleSaveChanges = (dataFromModal) => {
         const newBlockData = {
             ...bouquetData,
@@ -98,12 +99,7 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
         };
 
         // 1. СНАЧАЛА формируем сообщение и НЕМЕДЛЕННО открываем WhatsApp
-        let message = "Здравствуйте! Хочу заказать букет:\n\n";
-        items.forEach(item => {
-            message += `- ${item.name} × ${item.quantity}\n`;
-        });
-        message += `\n*Способ получения: ${deliveryInfo.name} (+${deliveryInfo.price} ₸)*`;
-        message += `\n*Итого к оплате: ${total} ₸*`;
+        let message = `Здравствуйте! Хочу заказать букет:\n\n${items.map(item => `- ${item.name} × ${item.quantity}`).join('\n')}\n\n*Способ получения: ${deliveryInfo.name} (+${deliveryInfo.price} ₸)*\n*Итого к оплате: ${total} ₸*`;
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${whatsAppNumber}?text=${encodedMessage}`, '_blank');
 
@@ -197,7 +193,7 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
                         className={`flex-1 text-sm border rounded-lg p-2 text-center transition-all ${deliveryMethod === 'delivery' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
                     >
                         <span className="font-medium">Доставка</span>
-                        <span className="block text-xs text-gray-600">+{deliveryOptions.delivery?.price || 0} ₸</span>
+                        <span className="block text-xs text-gray-600">+{deliveryOptions.delivery || 0} ₸</span>
                     </button>
                     <button
                         onClick={() => setDeliveryMethod('pickup')}
