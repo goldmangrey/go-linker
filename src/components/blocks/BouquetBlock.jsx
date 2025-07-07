@@ -67,6 +67,7 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
 
         setEditOpen(false);
     };
+    // Код после изменений
     const handleOrderClick = async () => {
         const whatsAppNumber = block.data?.whatsappNumber;
         if (!whatsAppNumber || !ownerId) return;
@@ -88,27 +89,29 @@ const BouquetBlock = ({ block, onUpdate, editable, ownerId }) => {
             items,
             totalPrice: total,
             customerPhone: whatsAppNumber.replace(/\D/g, ''),
-            status: 'new', // Статус по умолчанию
+            status: 'new',
             createdAt: Timestamp.now()
         };
 
+        // 1. СНАЧАЛА формируем сообщение и НЕМЕДЛЕННО открываем WhatsApp
+        let message = "Здравствуйте! Хочу заказать букет:\n\n";
+        items.forEach(item => {
+            message += `- ${item.name} × ${item.quantity}\n`;
+        });
+        message += `\n*Итого: ${total} ₸*`;
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/${whatsAppNumber}?text=${encodedMessage}`, '_blank');
+
+        // 2. ПОТОМ сохраняем заказ в базу данных
         try {
-            // Сохраняем заказ в Firestore
             const ordersRef = collection(db, 'users', ownerId, 'orders');
             await addDoc(ordersRef, orderData);
-
-            // Формируем и открываем сообщение в WhatsApp
-            let message = "Здравствуйте! Хочу заказать букет:\n\n";
-            items.forEach(item => {
-                message += `- ${item.name} × ${item.quantity}\n`;
-            });
-            message += `\n*Итого: ${total} ₸*`;
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/${whatsAppNumber}?text=${encodedMessage}`, '_blank');
+            // Заказ успешно сохранен в фоне
 
         } catch (error) {
-            console.error("Ошибка при создании заказа:", error);
-            alert("Не удалось создать заказ. Попробуйте снова.");
+            console.error("Ошибка при создании заказа в фоне:", error);
+            // Здесь можно добавить логику для отправки отчета об ошибке,
+            // но для пользователя процесс уже прошел успешно.
         } finally {
             setIsOrdering(false);
         }
